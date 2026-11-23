@@ -23,12 +23,18 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
             </span>
           </div>
 
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <a
+              routerLink="/portal"
+              class="px-3.5 py-1.5 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 text-xs font-mono font-bold uppercase tracking-wider border border-neutral-700 transition-colors"
+            >
+              Client Portal &rarr;
+            </a>
             <a
               routerLink="/admin"
-              class="px-4 py-2 bg-white text-neutral-900 hover:bg-neutral-200 text-xs font-mono font-bold uppercase tracking-wider border border-white transition-colors"
+              class="px-3.5 py-1.5 bg-white text-neutral-900 hover:bg-neutral-200 text-xs font-mono font-bold uppercase tracking-wider border border-white transition-colors"
             >
-              Admin Portal →
+              Admin Portal &rarr;
             </a>
           </div>
         </div>
@@ -49,7 +55,7 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
           </h1>
 
           <p class="text-sm sm:text-base text-neutral-700 max-w-2xl font-normal leading-relaxed mb-8">
-            Generate high-converting, sharp modern portfolio sites with integrated appointment scheduling, service catalogs, and custom domain hosting. Built on Angular v22 Signals and built-in SSR.
+            Generate high-converting, sharp modern portfolio sites with integrated appointment scheduling, service catalogs, autonomous client self-service dashboards, and real-time Email & WhatsApp instant actions.
           </p>
 
           <div class="flex flex-wrap items-center gap-4 pt-4 border-t-2 border-neutral-900">
@@ -57,13 +63,20 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
               routerLink="/admin/onboard"
               class="px-6 py-3.5 bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-neutral-800 transition-all cursor-pointer"
             >
-              + Onboard New Client Now
+              + Onboard New Client
+            </a>
+            <a
+              routerLink="/portal"
+              class="px-6 py-3.5 bg-neutral-900 text-emerald-400 text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 hover:bg-neutral-800 transition-all flex items-center gap-2"
+            >
+              <app-sharp-icon name="user" customClass="w-3.5 h-3.5" />
+              <span>Practitioner Portal Login</span>
             </a>
             <a
               routerLink="/admin"
               class="px-6 py-3.5 bg-white text-neutral-900 text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 hover:bg-neutral-100 transition-all"
             >
-              Explore Admin Control Room
+              Admin Control Room
             </a>
           </div>
         </div>
@@ -91,56 +104,62 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
                   <img
                     [src]="prof.avatarUrl"
                     [alt]="prof.name"
-                    class="w-16 h-16 sm:w-20 sm:h-20 object-cover border-2 border-neutral-900 grayscale contrast-125"
+                    class="w-16 h-16 object-cover border-2 border-neutral-900 shrink-0"
                   />
                   <div>
                     <div class="flex items-center gap-2 mb-1">
-                      <app-sharp-badge [variant]="getProfessionBadge(prof.profession)">
+                      <app-sharp-badge [variant]="prof.profession === 'doctor' ? 'teal' : 'indigo'">
                         {{ prof.profession }}
                       </app-sharp-badge>
-                      <span class="text-[10px] font-mono text-neutral-500">{{ prof.theme }}</span>
+                      <span class="text-[11px] font-mono text-neutral-500">{{ prof.country }}</span>
                     </div>
-                    <h3 class="text-lg font-black uppercase tracking-tight text-neutral-900">
+                    <h3 class="text-lg font-bold text-neutral-900 leading-tight">
                       {{ prof.name }}
                     </h3>
-                    <p class="text-xs font-mono font-bold text-neutral-700">
-                      {{ prof.title }}
+                    <p class="text-xs text-neutral-600 font-mono mt-0.5">
+                      {{ prof.clinicOrSchoolName }}
                     </p>
                   </div>
                 </div>
 
-                <p class="text-xs text-neutral-600 line-clamp-3 mb-4 leading-relaxed">
+                <p class="text-xs text-neutral-700 line-clamp-3 mb-4 leading-relaxed font-sans">
                   {{ prof.bio }}
                 </p>
 
-                <!-- Credentials chips -->
-                <div class="flex flex-wrap gap-1.5 mb-6">
-                  @for (cred of prof.credentials.slice(0, 2); track cred) {
-                    <span class="px-2 py-0.5 bg-neutral-100 border border-neutral-300 text-[10px] font-mono text-neutral-700">
-                      ✓ {{ cred }}
-                    </span>
-                  }
-                </div>
-
-                <!-- Custom domain banner -->
-                <div class="p-3 bg-neutral-50 border border-neutral-200 mb-6 font-mono text-[11px] text-neutral-600 flex items-center justify-between">
-                  <span>Custom Domain:</span>
-                  <strong class="text-neutral-900">
-                    {{ prof.customDomain || 'Not set (using /@' + prof.slug + ')' }}
-                  </strong>
+                <!-- Domain Info -->
+                <div class="bg-neutral-50 border border-neutral-200 p-3 mb-4 font-mono text-xs">
+                  <div class="flex items-center justify-between text-neutral-600 mb-1">
+                    <span class="text-[10px] uppercase font-bold text-neutral-400">Hosting Mode:</span>
+                    @if (prof.customDomain) {
+                      <span class="text-emerald-700 font-bold flex items-center gap-1">
+                        <app-sharp-icon name="globe" customClass="w-3 h-3" />
+                        Custom Host
+                      </span>
+                    } @else {
+                      <span class="text-neutral-600 font-bold">Sub-Route</span>
+                    }
+                  </div>
+                  <div class="text-neutral-900 font-bold truncate">
+                    @if (prof.customDomain) {
+                      <span>{{ prof.customDomain }}</span>
+                    } @else {
+                      <span>profilease.io/&#64;{{ prof.slug }}</span>
+                    }
+                  </div>
                 </div>
               </div>
 
-              <div class="pt-4 border-t-2 border-neutral-900 flex items-center justify-between">
-                <span class="text-xs font-mono font-bold text-neutral-800">
-                  {{ prof.services.length }} Available Services
+              <div class="pt-4 border-t border-neutral-200 flex items-center justify-between">
+                <span class="text-xs font-mono font-bold text-neutral-500">
+                  {{ prof.services.length }} Services Cataloged
                 </span>
+
                 <a
                   [routerLink]="['/@' + prof.slug]"
-                  class="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold uppercase tracking-wider border border-neutral-900 transition-colors flex items-center gap-2"
+                  class="px-4 py-2 bg-neutral-900 text-white hover:bg-neutral-800 text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
                 >
-                  <span>View Live Site</span>
-                  <app-sharp-icon name="chevron-right" customClass="w-3.5 h-3.5" />
+                  <span>Visit Portfolio</span>
+                  <app-sharp-icon name="external-link" customClass="w-3 h-3" />
                 </a>
               </div>
             </div>
@@ -148,57 +167,19 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
         </div>
       </section>
 
-      <!-- PLATFORM HIGHLIGHTS -->
-      <section class="border-t-2 border-neutral-900 bg-white py-16 px-4 sm:px-6">
-        <div class="max-w-6xl mx-auto">
-          <div class="border-b-2 border-neutral-900 pb-3 mb-8">
-            <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Core Architecture</span>
-            <h2 class="text-2xl font-black uppercase tracking-tight text-neutral-900">
-              Why Profilease Excels
-            </h2>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
-            <div class="p-6 border-2 border-neutral-900 bg-neutral-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <span class="w-8 h-8 bg-neutral-900 text-white flex items-center justify-center font-bold mb-3">01</span>
-              <strong class="text-sm font-bold uppercase text-neutral-900 block mb-2">Zero Rounded Corners</strong>
-              <p class="text-neutral-600 leading-relaxed font-sans text-xs">
-                Pure pointy neo-brutalist and architectural precision. Bold typography, high-contrast borders, and razor-sharp interfaces.
-              </p>
-            </div>
-
-            <div class="p-6 border-2 border-neutral-900 bg-neutral-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <span class="w-8 h-8 bg-neutral-900 text-white flex items-center justify-center font-bold mb-3">02</span>
-              <strong class="text-sm font-bold uppercase text-neutral-900 block mb-2">Angular v22 Signal Forms</strong>
-              <p class="text-neutral-600 leading-relaxed font-sans text-xs">
-                Real-time reactive appointment scheduling and client intake powered by the newest Angular &#64;angular/forms/signals API.
-              </p>
-            </div>
-
-            <div class="p-6 border-2 border-neutral-900 bg-neutral-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <span class="w-8 h-8 bg-neutral-900 text-white flex items-center justify-center font-bold mb-3">03</span>
-              <strong class="text-sm font-bold uppercase text-neutral-900 block mb-2">Host Header Domain Mapping</strong>
-              <p class="text-neutral-600 leading-relaxed font-sans text-xs">
-                Inbuilt Angular SSR backend inspects domain hosts and serves clients their own independent website on their personal domain.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- FOOTER -->
-      <footer class="bg-neutral-900 text-white py-8 px-4 text-center font-mono text-xs border-t-2 border-neutral-900 mt-auto">
-        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer class="border-t-2 border-neutral-900 bg-white py-8 mt-auto font-mono text-xs text-neutral-600">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 bg-white"></span>
-            <span class="font-bold uppercase">Profilease Engine</span>
-            <span class="text-neutral-500">© 2026</span>
+            <span class="w-3 h-3 bg-neutral-900"></span>
+            <span class="font-bold uppercase tracking-wider text-neutral-900">Profilease Platform</span>
           </div>
-
-          <div class="flex items-center gap-4 text-neutral-400">
-            <a routerLink="/admin" class="hover:text-white underline">Admin Control Room</a>
-            <span>•</span>
-            <a routerLink="/admin/onboard" class="hover:text-white underline">Onboard Profile</a>
+          <div class="flex items-center gap-4 text-xs font-bold uppercase">
+            <a routerLink="/portal" class="hover:text-neutral-900">Client Portal</a>
+            <span>&bull;</span>
+            <a routerLink="/admin" class="hover:text-neutral-900">Admin Control Room</a>
+            <span>&bull;</span>
+            <a routerLink="/admin/domains" class="hover:text-neutral-900">Domain Simulator</a>
           </div>
         </div>
       </footer>
@@ -206,23 +187,9 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
   `,
 })
 export class LandingPageComponent implements OnInit {
-  protected readonly profileService = inject(ProfileService);
+  readonly profileService = inject(ProfileService);
 
   ngOnInit(): void {
     this.profileService.loadAll().subscribe();
-  }
-
-  getProfessionBadge(profession: string): 'teal' | 'indigo' | 'amber' | 'neutral' {
-    switch (profession) {
-      case 'doctor':
-        return 'teal';
-      case 'teacher':
-        return 'indigo';
-      case 'coach':
-      case 'therapist':
-        return 'amber';
-      default:
-        return 'neutral';
-    }
   }
 }

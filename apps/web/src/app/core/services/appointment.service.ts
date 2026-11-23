@@ -41,6 +41,18 @@ export class AppointmentService {
     );
   }
 
+  loadForClient(profileId: string): Observable<readonly AppointmentBooking[]> {
+    const url = `/api/client/appointments?profileId=${encodeURIComponent(profileId)}`;
+    return this.http.get<readonly AppointmentBooking[]>(url).pipe(
+      tap((data) => this.appointments.set(data)),
+      catchError((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Failed to fetch appointments';
+        this.errorMessage.set(msg);
+        return throwError(() => err);
+      })
+    );
+  }
+
   book(dto: CreateAppointmentDto): Observable<AppointmentBooking> {
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
@@ -60,8 +72,8 @@ export class AppointmentService {
     );
   }
 
-  updateStatus(id: string, status: AppointmentStatus): Observable<AppointmentBooking> {
-    return this.http.patch<AppointmentBooking>(`${this.baseUrl}/${id}/status`, { status }).pipe(
+  updateClientAppointmentStatus(id: string, status: AppointmentStatus): Observable<AppointmentBooking> {
+    return this.http.patch<AppointmentBooking>(`/api/client/appointments/${id}/status`, { status }).pipe(
       tap((updated) => {
         this.appointments.update((prev) =>
           prev.map((a) => (a.id === updated.id ? updated : a))

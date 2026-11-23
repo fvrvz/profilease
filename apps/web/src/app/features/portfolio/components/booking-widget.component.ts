@@ -327,8 +327,7 @@ interface DateOption {
             You're All Set, {{ confirmedBooking()?.clientName }}!
           </h3>
           <p class="text-xs text-neutral-600 max-w-md mx-auto mb-6">
-            A confirmation receipt and calendar invitation have been sent to
-            <strong class="font-mono text-neutral-900">{{ confirmedBooking()?.clientEmail }}</strong>.
+            A real-time confirmation receipt has been dispatched to your email (<strong>{{ confirmedBooking()?.clientEmail }}</strong>) and WhatsApp. The practitioner has received an instant 1-click notification alert.
           </p>
 
           <!-- Sharp Ticket Box -->

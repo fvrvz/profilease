@@ -37,7 +37,7 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
               [routerLinkActiveOptions]="{ exact: true }"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Dashboard
+              Clients Directory
             </a>
             <a
               routerLink="/admin/onboard"
@@ -47,83 +47,60 @@ import { SharpIconComponent } from '../../shared/components/sharp-icon.component
               + Onboard Client
             </a>
             <a
-              routerLink="/admin/appointments"
-              routerLinkActive="bg-white text-neutral-900"
-              class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
-            >
-              Appointments
-            </a>
-            <a
               routerLink="/admin/domains"
               routerLinkActive="bg-white text-neutral-900"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Custom Domains
+              Domain Routing
             </a>
           </nav>
 
           <!-- User & Logout -->
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-4">
             <a
-              routerLink="/"
+              routerLink="/portal"
               target="_blank"
-              class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-700 text-[11px] font-mono text-neutral-300 hover:text-white hover:border-white transition-colors"
+              class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-mono font-bold uppercase border border-neutral-700"
             >
-              <app-sharp-icon name="external-link" customClass="w-3 h-3" />
-              <span>View Public Site</span>
+              <app-sharp-icon name="user" customClass="w-3.5 h-3.5" />
+              <span>Client Portal &rarr;</span>
             </a>
+
+            <div class="hidden sm:block text-right font-mono">
+              <span class="text-[10px] uppercase tracking-wider text-neutral-400 block leading-tight">Signed in as</span>
+              <span class="text-xs font-bold text-white">{{ authService.adminUser() || 'Platform Admin' }}</span>
+            </div>
 
             <button
               type="button"
-              (click)="auth.logout()"
-              class="px-3 py-1.5 bg-red-600/90 hover:bg-red-600 text-white text-xs font-mono font-bold uppercase tracking-wider border border-red-500 cursor-pointer"
+              (click)="logout()"
+              class="px-3 py-1.5 bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-300 text-xs font-mono font-bold uppercase transition-colors cursor-pointer border border-neutral-700"
             >
-              Log Out
+              Logout
             </button>
           </div>
         </div>
-
-        <!-- Mobile Nav Bar -->
-        <div class="md:hidden flex border-t border-neutral-800 overflow-x-auto text-[11px] font-mono uppercase">
-          <a
-            routerLink="/admin"
-            routerLinkActive="bg-white text-neutral-900"
-            [routerLinkActiveOptions]="{ exact: true }"
-            class="px-3 py-2 text-neutral-300 shrink-0"
-          >
-            Dashboard
-          </a>
-          <a
-            routerLink="/admin/onboard"
-            routerLinkActive="bg-white text-neutral-900"
-            class="px-3 py-2 text-neutral-300 shrink-0"
-          >
-            + Onboard
-          </a>
-          <a
-            routerLink="/admin/appointments"
-            routerLinkActive="bg-white text-neutral-900"
-            class="px-3 py-2 text-neutral-300 shrink-0"
-          >
-            Bookings
-          </a>
-          <a
-            routerLink="/admin/domains"
-            routerLinkActive="bg-white text-neutral-900"
-            class="px-3 py-2 text-neutral-300 shrink-0"
-          >
-            Domains
-          </a>
-        </div>
       </header>
 
-      <!-- Content Area -->
-      <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
+      <!-- Main Layout Body -->
+      <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
         <router-outlet />
       </main>
+
+      <!-- Footer -->
+      <footer class="border-t border-neutral-300 bg-white py-4 font-mono text-[11px] text-neutral-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>Profilease Multi-Tenant Administration &bull; Version 22.2</span>
+          <span>Admins manage & onboard clients &bull; Appointments managed by clients</span>
+        </div>
+      </footer>
     </div>
   `,
 })
 export class AdminLayoutComponent {
-  protected readonly auth = inject(AdminAuthService);
+  readonly authService = inject(AdminAuthService);
+
+  logout(): void {
+    this.authService.logout();
+  }
 }
