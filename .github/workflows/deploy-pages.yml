@@ -38,8 +38,9 @@ jobs:
       - name: Build Web App for GitHub Pages
         run: |
           npx nx build web --base-href=/profilease/
-          # SPA 404 fallback for direct routing on GitHub Pages
-          cp dist/apps/web/browser/index.html dist/apps/web/browser/404.html
+          # Copy CSR entry to index.html and 404.html for GitHub Pages SPA routing
+          cp dist/apps/web/browser/index.csr.html dist/apps/web/browser/index.html
+          cp dist/apps/web/browser/index.csr.html dist/apps/web/browser/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
