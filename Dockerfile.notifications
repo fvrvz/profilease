@@ -29,6 +29,7 @@ RUN addgroup -g 1001 -S profilease && \
 COPY --from=builder /app/package*.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist/apps/notifications ./dist
+COPY --from=builder /app/apps/notifications/src/assets ./dist/assets
 
 USER profilease
 
