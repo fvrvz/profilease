@@ -1,11 +1,13 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { AppModule } from './app/app.module';
+import { AppModule, ObserveInstrument } from './app/app.module';
 
 async function bootstrap() {
   const logger = new Logger('NotificationBootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    instrument: ObserveInstrument,
+  });
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
 
