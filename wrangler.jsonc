@@ -17,6 +17,12 @@
       "database_id": "b5a8122a-4e73-4812-9d23-dc4dd93fd095"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "STORAGE",
+      "bucket_name": "profilease-media"
+    }
+  ],
   "vars": {
     "NODE_ENV": "production",
     "RESEND_FROM_EMAIL": "onboarding@resend.dev"
