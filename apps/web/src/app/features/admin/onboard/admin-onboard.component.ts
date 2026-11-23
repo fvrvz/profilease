@@ -701,6 +701,9 @@ export class AdminOnboardComponent {
       socialLinks: [
         { platform: 'linkedin', url: 'https://linkedin.com' },
       ],
+      country: 'United States',
+      currency: 'USD',
+      timezone: 'America/New_York',
       isPublished: true,
     };
 

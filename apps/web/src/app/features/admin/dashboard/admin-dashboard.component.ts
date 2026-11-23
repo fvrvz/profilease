@@ -1,9 +1,7 @@
 import { Component, inject, OnInit, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AppointmentStatus } from '@profilease/types';
 import { ProfileService } from '../../../core/services/profile.service';
-import { AppointmentService } from '../../../core/services/appointment.service';
-import { SharpBadgeComponent } from '../../../shared/components/sharp-badge.component';
+import { SharpBadgeComponent, BadgeVariant } from '../../../shared/components/sharp-badge.component';
 import { SharpIconComponent } from '../../../shared/components/sharp-icon.component';
 
 @Component({
@@ -20,7 +18,7 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
         <div>
           <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">System Overview</span>
           <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-neutral-900">
-            Professional Profiles & Bookings
+            Client Management & Onboarding
           </h1>
         </div>
 
@@ -32,6 +30,14 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
             <app-sharp-icon name="plus" customClass="w-3.5 h-3.5" />
             <span>Onboard New Client</span>
           </a>
+          <a
+            routerLink="/portal"
+            target="_blank"
+            class="px-4 py-2.5 bg-white hover:bg-neutral-100 text-neutral-900 text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5 flex items-center gap-2"
+          >
+            <app-sharp-icon name="user" customClass="w-3.5 h-3.5" />
+            <span>Client Dashboard &rarr;</span>
+          </a>
         </div>
       </div>
 
@@ -40,7 +46,7 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
         <!-- Total Profiles -->
         <div class="bg-white border-2 border-neutral-900 p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-neutral-500 block mb-1">
-            Total Profiles
+            Total Clients
           </span>
           <div class="text-3xl font-black text-neutral-900 font-mono">
             {{ profileService.profiles().length }}
@@ -63,29 +69,42 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
           </span>
         </div>
 
-        <!-- Total Bookings -->
+        <!-- Total Services Cataloged -->
         <div class="bg-white border-2 border-neutral-900 p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-neutral-500 block mb-1">
-            Total Bookings
+            Services Cataloged
           </span>
           <div class="text-3xl font-black text-neutral-900 font-mono">
-            {{ appointmentService.appointments().length }}
+            {{ totalServicesCount() }}
           </div>
           <span class="text-[11px] font-mono text-neutral-500 mt-2 block">
-            Logged Client Consultations
+            Offered Across Clients
           </span>
         </div>
 
-        <!-- Pending Bookings -->
+        <!-- Notification Engine -->
         <div class="bg-white border-2 border-neutral-900 p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-neutral-500 block mb-1">
-            Pending Actions
+            Notification Engine
           </span>
-          <div class="text-3xl font-black text-amber-600 font-mono">
-            {{ pendingBookingsCount() }}
+          <div class="text-xl font-black text-emerald-600 font-mono mt-1">
+            ONLINE
           </div>
           <span class="text-[11px] font-mono text-neutral-500 mt-2 block">
-            Requires Confirmation
+            Email & WhatsApp + RMQ
+          </span>
+        </div>
+      </div>
+
+      <!-- ARCHITECTURAL NOTICE -->
+      <div class="p-4 bg-blue-50 border-2 border-blue-900 text-blue-950 font-mono text-xs flex items-start gap-3 shadow-[4px_4px_0px_0px_rgba(30,58,138,1)]">
+        <app-sharp-icon name="shield" customClass="w-5 h-5 text-blue-800 shrink-0 mt-0.5" />
+        <div>
+          <strong class="font-bold uppercase tracking-wide block mb-1">Admin Separation of Concerns Active:</strong>
+          <span>
+            Admins oversee onboarding, client setup, and domain routing. Appointment approvals and service management are delegated autonomously to clients via the private
+            <a routerLink="/portal" class="underline font-bold hover:text-blue-700">Client Portal</a>
+            or directly via tokenized 1-click email and WhatsApp notifications.
           </span>
         </div>
       </div>
@@ -96,11 +115,11 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 bg-neutral-900"></span>
             <h2 class="text-xs font-mono font-bold uppercase tracking-widest text-neutral-900">
-              Active Client Profiles Directory
+              Active Client Directory (Clients / Practitioners)
             </h2>
           </div>
           <span class="text-xs font-mono text-neutral-500">
-            {{ profileService.profiles().length }} Profiles Managed
+            {{ profileService.profiles().length }} Clients Active
           </span>
         </div>
 
@@ -108,11 +127,12 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
           <table class="w-full text-left border-collapse text-xs font-mono">
             <thead>
               <tr class="border-b border-neutral-200 bg-neutral-100/70 text-neutral-700 uppercase tracking-wider text-[11px]">
-                <th class="py-3 px-4">Practitioner / Client</th>
+                <th class="py-3 px-4">Client / Practitioner</th>
                 <th class="py-3 px-4">Profession</th>
-                <th class="py-3 px-4">Slug / Route</th>
+                <th class="py-3 px-4">Slug & Route</th>
                 <th class="py-3 px-4">Custom Domain</th>
-                <th class="py-3 px-4">Services</th>
+                <th class="py-3 px-4">Country & Currency</th>
+                <th class="py-3 px-4">Client Access Key</th>
                 <th class="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -128,7 +148,7 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
                       />
                       <div>
                         <span class="block">{{ prof.name }}</span>
-                        <span class="text-[10px] text-neutral-500 font-normal">{{ prof.clinicOrSchoolName }}</span>
+                        <span class="text-[10px] text-neutral-500 font-normal">{{ prof.email }}</span>
                       </div>
                     </div>
                   </td>
@@ -157,7 +177,13 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
                     }
                   </td>
                   <td class="py-3.5 px-4">
-                    <span class="font-bold">{{ prof.services.length }}</span> items
+                    <span class="font-bold">{{ prof.country }}</span>
+                    <span class="text-neutral-500 block text-[10px]">({{ prof.currency }})</span>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <code class="px-2 py-0.5 bg-neutral-100 border border-neutral-300 text-neutral-800 font-bold">
+                      {{ prof.clientAccessKey || 'client123' }}
+                    </code>
                   </td>
                   <td class="py-3.5 px-4 text-right">
                     <div class="inline-flex items-center gap-2">
@@ -183,140 +209,40 @@ import { SharpIconComponent } from '../../../shared/components/sharp-icon.compon
           </table>
         </div>
       </div>
-
-      <!-- RECENT APPOINTMENT REQUESTS -->
-      <div class="bg-white border-2 border-neutral-900 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-        <div class="px-6 py-4 border-b-2 border-neutral-900 flex items-center justify-between bg-neutral-50">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 bg-neutral-900"></span>
-            <h2 class="text-xs font-mono font-bold uppercase tracking-widest text-neutral-900">
-              Incoming Appointment Bookings
-            </h2>
-          </div>
-          <a routerLink="/admin/appointments" class="text-xs font-mono font-bold uppercase underline hover:text-neutral-600">
-            View All Bookings →
-          </a>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs font-mono">
-            <thead>
-              <tr class="border-b border-neutral-200 bg-neutral-100/70 text-neutral-700 uppercase tracking-wider text-[11px]">
-                <th class="py-3 px-4">Client / Patient</th>
-                <th class="py-3 px-4">Contact</th>
-                <th class="py-3 px-4">Service</th>
-                <th class="py-3 px-4">Date & Time</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4 text-right">Update Status</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-neutral-200">
-              @for (apt of appointmentService.appointments().slice(0, 5); track apt.id) {
-                <tr class="hover:bg-neutral-50/80 transition-colors">
-                  <td class="py-3 px-4">
-                    <strong class="text-neutral-900 block">{{ apt.clientName }}</strong>
-                    @if (apt.notes) {
-                      <span class="text-[10px] text-neutral-500 line-clamp-1">"{{ apt.notes }}"</span>
-                    }
-                  </td>
-                  <td class="py-3 px-4 text-neutral-600">
-                    <div>{{ apt.clientEmail }}</div>
-                    <div class="text-[10px] text-neutral-500">{{ apt.clientPhone }}</div>
-                  </td>
-                  <td class="py-3 px-4 font-bold text-neutral-800">
-                    {{ apt.serviceTitle }}
-                  </td>
-                  <td class="py-3 px-4">
-                    <span class="font-bold text-neutral-900">{{ apt.appointmentDate }}</span>
-                    <span class="text-neutral-500 block text-[10px]">{{ apt.appointmentTime }}</span>
-                  </td>
-                  <td class="py-3 px-4">
-                    <app-sharp-badge [variant]="getStatusBadge(apt.status)">
-                      {{ apt.status }}
-                    </app-sharp-badge>
-                  </td>
-                  <td class="py-3 px-4 text-right">
-                    <div class="inline-flex items-center gap-1.5">
-                      @if (apt.status === 'pending') {
-                        <button
-                          type="button"
-                          (click)="updateStatus(apt.id, 'confirmed')"
-                          class="px-2 py-1 bg-emerald-600 text-white text-[10px] font-bold uppercase hover:bg-emerald-700 border border-emerald-700 cursor-pointer"
-                        >
-                          Confirm
-                        </button>
-                      }
-                      @if (apt.status !== 'cancelled') {
-                        <button
-                          type="button"
-                          (click)="updateStatus(apt.id, 'cancelled')"
-                          class="px-2 py-1 bg-neutral-200 text-neutral-800 text-[10px] font-bold uppercase hover:bg-neutral-300 border border-neutral-400 cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   `,
 })
 export class AdminDashboardComponent implements OnInit {
-  protected readonly profileService = inject(ProfileService);
-  protected readonly appointmentService = inject(AppointmentService);
+  readonly profileService = inject(ProfileService);
 
   readonly customDomainsCount = computed(() => {
     return this.profileService.profiles().filter((p) => !!p.customDomain).length;
   });
 
-  readonly pendingBookingsCount = computed(() => {
-    return this.appointmentService.appointments().filter((a) => a.status === 'pending').length;
+  readonly totalServicesCount = computed(() => {
+    return this.profileService
+      .profiles()
+      .reduce((sum, p) => sum + (p.services ? p.services.length : 0), 0);
   });
 
   ngOnInit(): void {
     this.profileService.loadAll().subscribe();
-    this.appointmentService.loadAll().subscribe();
   }
 
-  deleteProfile(id: string): void {
-    if (confirm('Are you sure you want to delete this client profile?')) {
-      this.profileService.delete(id).subscribe();
-    }
-  }
-
-  updateStatus(id: string, status: AppointmentStatus): void {
-    this.appointmentService.updateStatus(id, status).subscribe();
-  }
-
-  getProfessionBadge(profession: string): 'teal' | 'indigo' | 'amber' | 'neutral' {
+  getProfessionBadge(profession: string): BadgeVariant {
     switch (profession) {
       case 'doctor':
         return 'teal';
       case 'teacher':
         return 'indigo';
-      case 'coach':
-      case 'therapist':
-        return 'amber';
       default:
         return 'neutral';
     }
   }
 
-  getStatusBadge(status: string): 'green' | 'amber' | 'red' | 'neutral' {
-    switch (status) {
-      case 'confirmed':
-        return 'green';
-      case 'pending':
-        return 'amber';
-      case 'cancelled':
-        return 'red';
-      default:
-        return 'neutral';
+  deleteProfile(id: string): void {
+    if (confirm('Are you sure you want to delete this client profile?')) {
+      this.profileService.delete(id).subscribe();
     }
   }
 }

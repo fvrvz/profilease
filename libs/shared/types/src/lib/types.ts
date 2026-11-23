@@ -21,8 +21,10 @@ export interface ServiceItem {
   readonly tags: readonly string[];
 }
 
+export type WeekDay = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
 export interface DayAvailability {
-  readonly day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+  readonly day: WeekDay;
   readonly enabled: boolean;
   readonly startTime: string; // HH:mm format e.g. "09:00"
   readonly endTime: string;   // HH:mm format e.g. "17:00"
@@ -58,6 +60,11 @@ export interface UserProfile {
   readonly clinicOrSchoolName: string;
   readonly email: string;
   readonly phone: string;
+  readonly country: string;
+  readonly currency: string;
+  readonly timezone: string;
+  readonly timingsNote?: string;
+  readonly clientAccessKey?: string; // used for client portal login
   readonly emergencyNotice?: string;
   readonly theme: ThemeVariant;
   readonly services: readonly ServiceItem[];
@@ -69,7 +76,7 @@ export interface UserProfile {
   readonly updatedAt: string;
 }
 
-export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
+export type AppointmentStatus = 'pending' | 'confirmed' | 'declined' | 'cancelled' | 'completed';
 
 export interface AppointmentBooking {
   readonly id: string;
@@ -83,6 +90,7 @@ export interface AppointmentBooking {
   readonly appointmentTime: string; // HH:mm
   readonly notes: string;
   readonly status: AppointmentStatus;
+  readonly actionToken: string; // Direct 1-click action token for email / WhatsApp
   readonly createdAt: string;
 }
 
@@ -100,6 +108,11 @@ export interface CreateProfileDto {
   readonly clinicOrSchoolName: string;
   readonly email: string;
   readonly phone: string;
+  readonly country?: string;
+  readonly currency?: string;
+  readonly timezone?: string;
+  readonly timingsNote?: string;
+  readonly clientAccessKey?: string;
   readonly emergencyNotice?: string;
   readonly theme: ThemeVariant;
   readonly services: readonly ServiceItem[];
@@ -135,7 +148,51 @@ export interface AdminAuthResponse {
   readonly username: string;
 }
 
+export interface ClientLoginDto {
+  readonly email: string;
+  readonly accessKey: string;
+}
+
+export interface ClientAuthResponse {
+  readonly success: boolean;
+  readonly token: string;
+  readonly profile: UserProfile;
+}
+
 export interface DomainResolutionResponse {
   readonly matched: boolean;
   readonly profile?: UserProfile;
+}
+
+export type NotificationChannel = 'email' | 'whatsapp';
+
+export interface AppointmentNotificationMessage {
+  readonly eventId: string;
+  readonly eventType: 'appointment.created' | 'appointment.confirmed' | 'appointment.declined' | 'appointment.cancelled';
+  readonly appointmentId: string;
+  readonly profileId: string;
+  readonly clientName: string;
+  readonly clientEmail: string;
+  readonly clientPhone: string;
+  readonly professionalName: string;
+  readonly professionalEmail: string;
+  readonly professionalPhone: string;
+  readonly serviceTitle: string;
+  readonly appointmentDate: string;
+  readonly appointmentTime: string;
+  readonly notes: string;
+  readonly actionToken: string;
+  readonly acceptUrl: string;
+  readonly declineUrl: string;
+  readonly channels: readonly NotificationChannel[];
+  readonly sentAt: string;
+}
+
+export interface NotificationDeliveryResult {
+  readonly channel: NotificationChannel;
+  readonly recipient: string;
+  readonly status: 'delivered' | 'failed' | 'simulated';
+  readonly messageId: string;
+  readonly timestamp: string;
+  readonly details?: string;
 }

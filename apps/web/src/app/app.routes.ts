@@ -1,5 +1,6 @@
 import { Route, UrlMatcher, UrlSegment } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
+import { clientGuard } from './core/guards/client.guard';
 
 export const atSlugMatcher: UrlMatcher = (segments: UrlSegment[]) => {
   if (segments.length === 1 && segments[0].path.startsWith('@')) {
@@ -21,6 +22,7 @@ export const appRoutes: Route[] = [
         (m) => m.LandingPageComponent
       ),
   },
+  // --- Admin Portal (Onboarding & Client Directory Only) ---
   {
     path: 'admin/login',
     loadComponent: () =>
@@ -51,21 +53,72 @@ export const appRoutes: Route[] = [
           ),
       },
       {
-        path: 'appointments',
-        loadComponent: () =>
-          import('./features/admin/appointments/admin-appointments.component').then(
-            (m) => m.AdminAppointmentsComponent
-          ),
-      },
-      {
         path: 'domains',
         loadComponent: () =>
           import('./features/admin/domains/admin-domains.component').then(
             (m) => m.AdminDomainsComponent
           ),
       },
+      {
+        path: 'appointments',
+        redirectTo: '',
+      },
     ],
   },
+  // --- Client Self-Service Portal (Appointments, Services, Timings, Availability) ---
+  {
+    path: 'portal/login',
+    loadComponent: () =>
+      import('./features/portal/portal-login.component').then(
+        (m) => m.PortalLoginComponent
+      ),
+  },
+  {
+    path: 'portal',
+    canActivate: [clientGuard],
+    loadComponent: () =>
+      import('./features/portal/portal-layout.component').then(
+        (m) => m.PortalLayoutComponent
+      ),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/portal/portal-appointments.component').then(
+            (m) => m.PortalAppointmentsComponent
+          ),
+      },
+      {
+        path: 'appointments',
+        loadComponent: () =>
+          import('./features/portal/portal-appointments.component').then(
+            (m) => m.PortalAppointmentsComponent
+          ),
+      },
+      {
+        path: 'services',
+        loadComponent: () =>
+          import('./features/portal/portal-services.component').then(
+            (m) => m.PortalServicesComponent
+          ),
+      },
+      {
+        path: 'availability',
+        loadComponent: () =>
+          import('./features/portal/portal-availability.component').then(
+            (m) => m.PortalAvailabilityComponent
+          ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/portal/portal-profile.component').then(
+            (m) => m.PortalProfileComponent
+          ),
+      },
+    ],
+  },
+  // --- Public Portfolio Routes ---
   {
     matcher: atSlugMatcher,
     loadComponent: () =>

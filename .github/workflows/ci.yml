@@ -40,5 +40,5 @@ jobs:
       - name: Test affected projects only (Difference Test)
         run: npx nx affected -t test --parallel=2
 
-      - name: Build web application
-        run: npx nx build web
+      - name: Build affected projects (Difference Build)
+        run: npx nx affected -t build --parallel=2

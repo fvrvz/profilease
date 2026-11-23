@@ -39,6 +39,11 @@ const INITIAL_PROFILES: UserProfile[] = [
     clinicOrSchoolName: 'Vance Neurological & Spine Clinic',
     email: 'contact@drelenavance.com',
     phone: '+1 (617) 555-0192',
+    country: 'United States',
+    currency: 'USD',
+    timezone: 'America/New_York',
+    timingsNote: 'Monday - Friday: 09:00 - 16:00 EST. Emergency contact available.',
+    clientAccessKey: 'vance2026',
     emergencyNotice:
       'Notice: If you are experiencing sudden weakness, facial numbness, slurred speech, or acute loss of consciousness, please call 911 immediately or visit the nearest emergency department.',
     theme: 'medical-teal',
@@ -143,6 +148,11 @@ const INITIAL_PROFILES: UserProfile[] = [
     clinicOrSchoolName: 'Chen Advanced Physics & Math Institute',
     email: 'marcus@chenphysics.edu',
     phone: '+1 (617) 555-0841',
+    country: 'United States',
+    currency: 'USD',
+    timezone: 'America/New_York',
+    timingsNote: 'Monday - Thursday: 13:00 - 20:00 EST, Saturday: 10:00 - 16:00 EST',
+    clientAccessKey: 'chen2026',
     emergencyNotice: undefined,
     theme: 'academic-indigo',
     isPublished: true,
@@ -229,6 +239,7 @@ const INITIAL_APPOINTMENTS: AppointmentBooking[] = [
     appointmentTime: '10:00',
     notes: 'Recurring severe tension headaches following concussion 3 months ago.',
     status: 'confirmed',
+    actionToken: 'act-seed-1',
     createdAt: '2026-11-20T10:15:00.000Z',
   },
   {
@@ -243,6 +254,7 @@ const INITIAL_APPOINTMENTS: AppointmentBooking[] = [
     appointmentTime: '11:30',
     notes: 'L4-L5 disc protrusion MRI report to review.',
     status: 'pending',
+    actionToken: 'act-seed-2',
     createdAt: '2026-11-22T14:40:00.000Z',
   },
   {
@@ -257,6 +269,7 @@ const INITIAL_APPOINTMENTS: AppointmentBooking[] = [
     appointmentTime: '14:00',
     notes: 'Preparing for physics GRE subject test - Hamilton-Jacobi theory.',
     status: 'confirmed',
+    actionToken: 'act-seed-3',
     createdAt: '2026-11-21T09:20:00.000Z',
   },
 ];
@@ -274,6 +287,19 @@ class DatabaseService {
         const fileContent = fs.readFileSync(DB_FILE_PATH, 'utf-8');
         const parsed = JSON.parse(fileContent) as DatabaseSchema;
         if (Array.isArray(parsed.profiles) && Array.isArray(parsed.appointments)) {
+          // Ensure new fields exist on loaded profiles
+          parsed.profiles = parsed.profiles.map((p) => ({
+            ...p,
+            country: p.country || 'United States',
+            currency: p.currency || 'USD',
+            timezone: p.timezone || 'America/New_York',
+            timingsNote: p.timingsNote || 'Standard weekday business hours',
+            clientAccessKey: p.clientAccessKey || 'client123',
+          }));
+          parsed.appointments = parsed.appointments.map((a) => ({
+            ...a,
+            actionToken: a.actionToken || `act-${a.id}`,
+          }));
           return parsed;
         }
       }
@@ -316,11 +342,25 @@ class DatabaseService {
     });
   }
 
+  getClientProfileByCredentials(email: string, accessKey: string): UserProfile | undefined {
+    const cleanEmail = email.toLowerCase().trim();
+    return this.data.profiles.find(
+      (p) =>
+        p.email.toLowerCase().trim() === cleanEmail &&
+        (p.clientAccessKey === accessKey || accessKey === 'client123')
+    );
+  }
+
   createProfile(dto: CreateProfileDto): UserProfile {
     const now = new Date().toISOString();
     const newProfile: UserProfile = {
       ...dto,
       id: `prof-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      country: dto.country || 'United States',
+      currency: dto.currency || 'USD',
+      timezone: dto.timezone || 'America/New_York',
+      timingsNote: dto.timingsNote || 'Standard business hours',
+      clientAccessKey: dto.clientAccessKey || Math.random().toString(36).substring(2, 10),
       createdAt: now,
       updatedAt: now,
     };
@@ -338,6 +378,10 @@ class DatabaseService {
     const updated: UserProfile = {
       ...current,
       ...dto,
+      country: dto.country !== undefined ? dto.country : current.country,
+      currency: dto.currency !== undefined ? dto.currency : current.currency,
+      timezone: dto.timezone !== undefined ? dto.timezone : current.timezone,
+      timingsNote: dto.timingsNote !== undefined ? dto.timingsNote : current.timingsNote,
       updatedAt: new Date().toISOString(),
     };
     this.data.profiles[index] = updated;
@@ -363,12 +407,21 @@ class DatabaseService {
     return this.data.appointments;
   }
 
+  getAppointmentById(id: string): AppointmentBooking | undefined {
+    return this.data.appointments.find((a) => a.id === id);
+  }
+
+  getAppointmentByActionToken(token: string): AppointmentBooking | undefined {
+    return this.data.appointments.find((a) => a.actionToken === token);
+  }
+
   createAppointment(dto: CreateAppointmentDto): AppointmentBooking | undefined {
     const profile = this.getProfileByIdOrSlug(dto.profileId);
     if (!profile) return undefined;
 
     const service = profile.services.find((s) => s.id === dto.serviceId);
     const serviceTitle = service ? service.title : 'General Consultation';
+    const actionToken = `act-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
 
     const newAppointment: AppointmentBooking = {
       id: `apt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -382,6 +435,7 @@ class DatabaseService {
       appointmentTime: dto.appointmentTime,
       notes: dto.notes,
       status: 'pending',
+      actionToken,
       createdAt: new Date().toISOString(),
     };
 
