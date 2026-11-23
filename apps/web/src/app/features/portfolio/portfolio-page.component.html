@@ -132,6 +132,25 @@
                     Call: {{ profile()?.phone }}
                   </a>
                 </div>
+
+                <!-- Social Media & External Profiles -->
+                @if (profile()?.socialLinks?.length) {
+                  <div class="flex flex-wrap items-center gap-2 pt-4 mt-2 border-t border-neutral-200 font-mono text-xs">
+                    <span class="text-[10px] uppercase font-bold text-neutral-500 mr-1">Public Profiles:</span>
+                    @for (social of profile()?.socialLinks; track social.url) {
+                      <a
+                        [href]="social.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-neutral-100 hover:bg-neutral-900 hover:text-white border border-neutral-900 text-xs font-bold uppercase transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                      >
+                        <app-sharp-icon [name]="social.platform" customClass="w-3.5 h-3.5" />
+                        <span>{{ social.platform }}</span>
+                        <app-sharp-icon name="external-link" customClass="w-2.5 h-2.5 opacity-60" />
+                      </a>
+                    }
+                  </div>
+                }
               </div>
             </div>
           </section>
@@ -201,16 +220,28 @@
 
           <!-- SERVICES & OFFERINGS -->
           <section id="services">
-            <div class="border-b-2 border-neutral-900 pb-3 mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div class="border-b-2 border-neutral-900 pb-3 mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Services & Consultations</span>
                 <h2 class="text-2xl font-black uppercase tracking-tight text-neutral-900">
                   What We Offer
                 </h2>
+                <span class="text-xs font-mono text-neutral-600 block mt-1">
+                  {{ profile()?.services?.length }} Professional Offerings
+                </span>
               </div>
-              <span class="text-xs font-mono text-neutral-600">
-                {{ profile()?.services?.length }} Clinical & Advisory Offerings
-              </span>
+
+              <!-- Real-time Currency Converter Switcher -->
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] font-mono text-neutral-600 uppercase">Currency:</span>
+                <div class="w-44">
+                  <app-sharp-select
+                    [options]="currencyService.currencyOptions()"
+                    [(value)]="currencyService.activeCurrency"
+                    [searchable]="true"
+                  />
+                </div>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -222,7 +253,7 @@
                         {{ srv.title }}
                       </h3>
                       <span class="px-2.5 py-1 bg-neutral-900 text-white font-mono text-xs font-bold border border-neutral-900">
-                        \${{ srv.price }}
+                        {{ currencyService.formatPrice(srv.price, profile()?.currency) }}
                       </span>
                     </div>
 
@@ -352,6 +383,23 @@
               <span class="font-bold uppercase">{{ profile()?.clinicOrSchoolName }}</span>
               <span class="text-neutral-500">© 2026</span>
             </div>
+
+            <!-- Social Links in Footer -->
+            @if (profile()?.socialLinks?.length) {
+              <div class="flex items-center gap-2">
+                @for (social of profile()?.socialLinks; track social.url) {
+                  <a
+                    [href]="social.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [title]="social.platform"
+                    class="p-1.5 border border-neutral-700 bg-neutral-800 hover:bg-white hover:text-neutral-900 transition-colors"
+                  >
+                    <app-sharp-icon [name]="social.platform" customClass="w-3.5 h-3.5" />
+                  </a>
+                }
+              </div>
+            }
 
             <div class="flex items-center gap-4 text-neutral-400">
               @if (profile()?.customDomain) {

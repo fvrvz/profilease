@@ -29,6 +29,7 @@ interface ProfileRow {
   currency: string;
   timezone: string;
   credentials: string | null;
+  social_links?: string | null;
 }
 
 interface ServiceRow {
@@ -395,6 +396,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       location?: string;
       clinicOrSchoolName?: string;
       credentials?: string[];
+      socialLinks?: Array<{ platform: string; url: string }>;
       emergencyNotice?: string;
     }>().catch(() => ({}));
 
@@ -413,12 +415,13 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const updatedAvatar = body.avatarUrl ?? current.avatar_url;
     const updatedPhone = body.phone ?? current.phone;
     const updatedCredentials = body.credentials ? JSON.stringify(body.credentials) : current.credentials;
+    const updatedSocialLinks = body.socialLinks ? JSON.stringify(body.socialLinks) : (current.social_links || null);
 
     await env.DB.prepare(`
       UPDATE profiles
-      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, credentials = ?
+      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, credentials = ?, social_links = ?
       WHERE id = ?
-    `).bind(updatedName, updatedTitle, updatedBio, updatedAvatar, updatedPhone, updatedCredentials, body.id).run();
+    `).bind(updatedName, updatedTitle, updatedBio, updatedAvatar, updatedPhone, updatedCredentials, updatedSocialLinks, body.id).run();
 
     const updatedRow = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(body.id).first<ProfileRow>();
     if (!updatedRow) {
@@ -525,6 +528,13 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     credentials = [];
   }
 
+  let socialLinks: Array<{ platform: string; url: string }> = [];
+  try {
+    if (row.social_links) socialLinks = JSON.parse(row.social_links);
+  } catch {
+    socialLinks = [];
+  }
+
   return {
     id: row.id,
     slug: row.slug,
@@ -542,6 +552,7 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     currency: row.currency,
     timezone: row.timezone,
     credentials,
+    socialLinks,
     services: servicesRes.results.map((s) => ({
       id: s.id,
       name: s.name,
