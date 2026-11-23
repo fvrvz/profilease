@@ -1,13 +1,11 @@
-import { Injectable, inject, signal, PLATFORM_ID } from '@angular/core';
+import { Service, inject, signal, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { ClientLoginDto, ClientAuthResponse, UserProfile, UpdateProfileDto } from '@profilease/types';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class ClientAuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);

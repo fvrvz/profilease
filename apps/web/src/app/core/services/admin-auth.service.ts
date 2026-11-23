@@ -1,13 +1,11 @@
-import { Injectable, inject, signal, PLATFORM_ID } from '@angular/core';
+import { Service, inject, signal, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError, of } from 'rxjs';
 import { AdminLoginDto, AdminAuthResponse } from '@profilease/types';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class AdminAuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);

@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, PLATFORM_ID } from '@angular/core';
+import { Service, inject, signal, PLATFORM_ID } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
@@ -9,9 +9,7 @@ import {
   DomainResolutionResponse,
 } from '@profilease/types';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class ProfileService {
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);

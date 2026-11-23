@@ -8,9 +8,9 @@ import {
   DayAvailability,
   CreateProfileDto,
 } from '@profilease/types';
-import { ProfileService } from '../../../core/services/profile.service';
-import { SharpButtonComponent } from '../../../shared/components/sharp-button.component';
-import { SharpIconComponent } from '../../../shared/components/sharp-icon.component';
+import { ProfileService } from '@service/profile.service';
+import { SharpButtonComponent } from '@shared/components/sharp-button.component';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
 @Component({
   selector: 'app-admin-onboard',

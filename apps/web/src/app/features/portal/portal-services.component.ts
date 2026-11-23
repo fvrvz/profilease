@@ -1,9 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { ServiceItem } from '@profilease/types';
-import { ClientAuthService } from '../../core/services/client-auth.service';
-import { SharpButtonComponent } from '../../shared/components/sharp-button.component';
-import { SharpIconComponent } from '../../shared/components/sharp-icon.component';
+import { ClientAuthService } from '@service/client-auth.service';
+import { SharpButtonComponent } from '@shared/components/sharp-button.component';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
 @Component({
   selector: 'app-portal-services',

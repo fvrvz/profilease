@@ -1,9 +1,9 @@
 import { Component, input, signal, computed, effect, inject } from '@angular/core';
 import { form, FormField, required, email } from '@angular/forms/signals';
 import { UserProfile, ServiceItem, AppointmentBooking } from '@profilease/types';
-import { AppointmentService } from '../../../core/services/appointment.service';
-import { SharpButtonComponent } from '../../../shared/components/sharp-button.component';
-import { SharpIconComponent } from '../../../shared/components/sharp-icon.component';
+import { AppointmentService } from '@service/appointment.service';
+import { SharpButtonComponent } from '@shared/components/sharp-button.component';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
 interface DateOption {
   readonly dateString: string; // YYYY-MM-DD

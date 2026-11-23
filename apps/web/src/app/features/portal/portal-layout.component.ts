@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { ClientAuthService } from '../../core/services/client-auth.service';
-import { SharpIconComponent } from '../../shared/components/sharp-icon.component';
+import { ClientAuthService } from '@service/client-auth.service';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
 @Component({
   selector: 'app-portal-layout',

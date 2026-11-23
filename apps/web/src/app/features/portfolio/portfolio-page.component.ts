@@ -2,9 +2,9 @@ import { Component, input, signal, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UpperCasePipe } from '@angular/common';
 import { UserProfile, ServiceItem } from '@profilease/types';
-import { ProfileService } from '../../core/services/profile.service';
-import { SharpBadgeComponent } from '../../shared/components/sharp-badge.component';
-import { SharpIconComponent } from '../../shared/components/sharp-icon.component';
+import { ProfileService } from '@service/profile.service';
+import { SharpBadgeComponent } from '@shared/components/sharp-badge.component';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 import { BookingWidgetComponent } from './components/booking-widget.component';
 
 @Component({
