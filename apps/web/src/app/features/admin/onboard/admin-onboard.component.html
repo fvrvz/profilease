@@ -202,16 +202,11 @@
               />
             </div>
 
-            <!-- Avatar URL -->
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
-                Avatar / Portrait Image URL *
-              </label>
-              <input
-                type="url"
-                [formField]="identityForm.avatarUrl"
-                placeholder="https://images.unsplash.com/photo-1559839734-2b71ea197ec2"
-                class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
+            <!-- Avatar Image Selection (Direct URL or R2 Upload & Crop) -->
+            <div class="pt-2">
+              <app-sharp-image-uploader
+                [imageUrl]="identityModel().avatarUrl"
+                (imageChanged)="onAvatarUrlChange($event)"
               />
             </div>
 

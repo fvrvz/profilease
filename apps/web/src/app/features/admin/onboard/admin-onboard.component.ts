@@ -11,6 +11,7 @@ import {
 import { ProfileService } from '@service/profile.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
+import { SharpImageUploaderComponent } from '@shared/components/sharp-image-uploader.component';
 
 @Component({
   selector: 'app-admin-onboard',
@@ -18,6 +19,7 @@ import { SharpIconComponent } from '@shared/components/sharp-icon.component';
     FormField,
     SharpButtonComponent,
     SharpIconComponent,
+    SharpImageUploaderComponent,
   ],
   templateUrl: './admin-onboard.component.html',
 })
@@ -48,7 +50,12 @@ export class AdminOnboardComponent {
     required(schema.email, { message: 'Email is required' });
     email(schema.email, { message: 'Valid email required' });
     required(schema.phone, { message: 'Phone is required' });
+    required(schema.avatarUrl, { message: 'Avatar image is mandatory. Provide Image URL or Upload & Crop.' });
   });
+
+  onAvatarUrlChange(newUrl: string): void {
+    this.identityModel.update((m) => ({ ...m, avatarUrl: newUrl }));
+  }
 
   // Signal Form for bio
   readonly bioModel = signal({
