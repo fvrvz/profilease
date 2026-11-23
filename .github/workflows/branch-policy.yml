@@ -1,0 +1,21 @@
+name: Branch Policy Enforcement
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-source-branch:
+    name: Verify Source is Develop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Source Branch
+        run: |
+          echo "Target Branch: ${{ github.base_ref }}"
+          echo "Source Branch: ${{ github.head_ref }}"
+          if [ "${{ github.head_ref }}" != "develop" ]; then
+            echo "::error::Direct merges into 'main' are restricted. 'main' can only merge from 'develop'. Branch '${{ github.head_ref }}' cannot be merged into 'main'."
+            exit 1
+          fi
+          echo "Verified: PR originates from 'develop' branch."
