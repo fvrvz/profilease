@@ -29,6 +29,18 @@
     "paths": {
       "@profilease/types": [
         "./libs/shared/types/src/index.ts"
+      ],
+      "@service/*": [
+        "./apps/web/src/app/core/services/*"
+      ],
+      "@shared/*": [
+        "./apps/web/src/app/shared/*"
+      ],
+      "@guards/*": [
+        "./apps/web/src/app/core/guards/*"
+      ],
+      "@features/*": [
+        "./apps/web/src/app/features/*"
       ]
     }
   },
