@@ -1,6 +1,7 @@
-import { Component, input, signal, inject, OnInit } from '@angular/core';
+import { Component, input, signal, inject, OnInit, effect } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UpperCasePipe } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 import { UserProfile, ServiceItem } from '@profilease/types';
 import { ProfileService } from '@service/profile.service';
 import { SharpBadgeComponent } from '@shared/components/sharp-badge.component';
@@ -23,9 +24,19 @@ export class PortfolioPageComponent implements OnInit {
   readonly slug = input<string>();
 
   protected readonly profileService = inject(ProfileService);
+  private readonly titleService = inject(Title);
 
   readonly selectedServiceId = signal<string>('');
   readonly profile = this.profileService.currentProfile;
+
+  constructor() {
+    effect(() => {
+      const prof = this.profile();
+      if (prof) {
+        this.titleService.setTitle(`${prof.name} — ${prof.title} | Profilease`);
+      }
+    });
+  }
 
   ngOnInit(): void {
     const slugVal = this.slug();

@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "profilease-web",
+  "main": "apps/web/worker.ts",
+  "compatibility_date": "2024-11-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": "dist/apps/web/browser",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "profilease-db",
+      "database_id": "b5a8122a-4e73-4812-9d23-dc4dd93fd095"
+    }
+  ],
+  "vars": {
+    "NODE_ENV": "production",
+    "RESEND_FROM_EMAIL": "onboarding@resend.dev"
+  }
+}
