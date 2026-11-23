@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { form, FormField, required } from '@angular/forms/signals';
 import { DayAvailability, WeekDay } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
+import { CurrencyService } from '@service/currency.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
+import { SharpSelectComponent, SharpSelectOption } from '@shared/components/sharp-select.component';
 
 @Component({
   selector: 'app-portal-availability',
@@ -11,14 +13,24 @@ import { SharpButtonComponent } from '@shared/components/sharp-button.component'
     CommonModule,
     FormField,
     SharpButtonComponent,
+    SharpSelectComponent,
   ],
   templateUrl: './portal-availability.component.html',
 })
 export class PortalAvailabilityComponent implements OnInit {
   private readonly clientAuth = inject(ClientAuthService);
+  protected readonly currencyService = inject(CurrencyService);
 
   readonly currentProfile = this.clientAuth.currentProfile;
   readonly saveSuccess = signal<boolean>(false);
+
+  readonly slotDurationOptions: readonly SharpSelectOption[] = [
+    { value: '15', label: '15 mins' },
+    { value: '30', label: '30 mins' },
+    { value: '45', label: '45 mins' },
+    { value: '60', label: '60 mins' },
+    { value: '90', label: '90 mins' },
+  ];
 
   readonly regionalState = signal({
     country: 'United States',
@@ -98,6 +110,16 @@ export class PortalAvailabilityComponent implements OnInit {
     const list = [...this.weeklySchedule()];
     list[index] = { ...list[index], slotDurationMinutes: Number(target.value) || 30 };
     this.weeklySchedule.set(list);
+  }
+
+  updateDurationValue(index: number, val: string): void {
+    const list = [...this.weeklySchedule()];
+    list[index] = { ...list[index], slotDurationMinutes: Number(val) || 30 };
+    this.weeklySchedule.set(list);
+  }
+
+  onCurrencySelect(val: string): void {
+    this.regionalState.update((s) => ({ ...s, currency: val }));
   }
 
   saveAvailabilitySchedule(): void {

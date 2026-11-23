@@ -2,6 +2,7 @@ import { Component, input, signal, computed, effect, inject } from '@angular/cor
 import { form, FormField, required, email } from '@angular/forms/signals';
 import { UserProfile, ServiceItem, AppointmentBooking } from '@profilease/types';
 import { AppointmentService } from '@service/appointment.service';
+import { CurrencyService } from '@service/currency.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
@@ -29,6 +30,7 @@ export class BookingWidgetComponent {
   readonly preselectedServiceId = input<string>();
 
   protected readonly appointmentService = inject(AppointmentService);
+  protected readonly currencyService = inject(CurrencyService);
 
   readonly step = signal<number>(1);
   readonly selectedServiceId = signal<string>('');

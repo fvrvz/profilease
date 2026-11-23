@@ -1,15 +1,21 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
+import { SocialLink, SocialPlatform } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 import { SharpImageUploaderComponent } from '@shared/components/sharp-image-uploader.component';
+import { SharpSelectComponent, SharpSelectOption } from '@shared/components/sharp-select.component';
 
 @Component({
   selector: 'app-portal-profile',
+  standalone: true,
   imports: [
     FormField,
     SharpButtonComponent,
+    SharpIconComponent,
     SharpImageUploaderComponent,
+    SharpSelectComponent,
   ],
   templateUrl: './portal-profile.component.html',
 })
@@ -18,6 +24,42 @@ export class PortalProfileComponent implements OnInit {
 
   readonly currentProfile = this.clientAuth.currentProfile;
   readonly saveSuccess = signal<boolean>(false);
+
+  // Universal Professions List
+  readonly professionOptions: readonly SharpSelectOption[] = [
+    { value: 'doctor', label: 'Doctor / Physician', sublabel: 'MD, Specialist, Surgeon', icon: 'stethoscope' },
+    { value: 'nurse', label: 'Nurse / Practitioner', sublabel: 'RN, NP, Clinical Nurse', icon: 'stethoscope' },
+    { value: 'engineer', label: 'Engineer', sublabel: 'Software, Mechanical, Civil', icon: 'briefcase' },
+    { value: 'developer', label: 'Developer / Programmer', sublabel: 'Full-Stack, Backend, Web', icon: 'briefcase' },
+    { value: 'teacher', label: 'Teacher / Educator', sublabel: 'Professor, Instructor, Tutor', icon: 'graduation' },
+    { value: 'student', label: 'Student / Scholar', sublabel: 'PhD, Researcher, Apprentice', icon: 'graduation' },
+    { value: 'therapist', label: 'Therapist / Counselor', sublabel: 'Psychologist, Mental Health', icon: 'user' },
+    { value: 'coach', label: 'Coach / Mentor', sublabel: 'Executive, Fitness, Career', icon: 'star' },
+    { value: 'consultant', label: 'Consultant / Advisor', sublabel: 'Strategy, Business, Tech', icon: 'briefcase' },
+    { value: 'designer', label: 'Designer / Creative', sublabel: 'UI/UX, Graphic, Product', icon: 'star' },
+    { value: 'lawyer', label: 'Lawyer / Attorney', sublabel: 'Legal Counsel, Advocate', icon: 'shield' },
+    { value: 'accountant', label: 'Accountant / CPA', sublabel: 'Finance, Tax, Auditor', icon: 'briefcase' },
+    { value: 'creator', label: 'Content Creator / Writer', sublabel: 'Author, Journalist, Video', icon: 'star' },
+    { value: 'artist', label: 'Artist / Photographer', sublabel: 'Visual Arts, Music, Photo', icon: 'star' },
+    { value: 'other', label: 'Custom / Other', sublabel: 'Enter your custom profession', icon: 'user' },
+  ];
+
+  readonly selectedProfession = signal<string>('doctor');
+
+  // Social Links state
+  readonly socialPlatformOptions: readonly SharpSelectOption[] = [
+    { value: 'linkedin', label: 'LinkedIn', icon: 'linkedin' },
+    { value: 'github', label: 'GitHub', icon: 'github' },
+    { value: 'twitter', label: 'X (Twitter)', icon: 'twitter' },
+    { value: 'instagram', label: 'Instagram', icon: 'instagram' },
+    { value: 'youtube', label: 'YouTube', icon: 'youtube' },
+    { value: 'website', label: 'Personal Website / Portfolio', icon: 'globe' },
+    { value: 'facebook', label: 'Facebook', icon: 'facebook' },
+    { value: 'discord', label: 'Discord', icon: 'discord' },
+  ];
+
+  readonly newSocialPlatform = signal<string>('linkedin');
+  readonly socialLinksList = signal<SocialLink[]>([]);
 
   readonly profileState = signal({
     name: '',
@@ -42,6 +84,9 @@ export class PortalProfileComponent implements OnInit {
   ngOnInit(): void {
     const p = this.currentProfile();
     if (p) {
+      this.selectedProfession.set(p.profession || 'other');
+      this.socialLinksList.set(p.socialLinks ? [...p.socialLinks] : []);
+
       this.profileState.set({
         name: p.name,
         title: p.title,
@@ -61,6 +106,19 @@ export class PortalProfileComponent implements OnInit {
     this.profileState.update((s) => ({ ...s, avatarUrl: newUrl }));
   }
 
+  addSocialLink(urlInput: HTMLInputElement): void {
+    const url = urlInput.value.trim();
+    if (!url) return;
+
+    const platform = this.newSocialPlatform() as SocialPlatform;
+    this.socialLinksList.update((prev) => [...prev, { platform, url }]);
+    urlInput.value = '';
+  }
+
+  removeSocialLink(index: number): void {
+    this.socialLinksList.update((prev) => prev.filter((_, i) => i !== index));
+  }
+
   onSaveProfile(event: Event): void {
     event.preventDefault();
     const val = this.profileState();
@@ -70,11 +128,13 @@ export class PortalProfileComponent implements OnInit {
       .updateProfile({
         name: val.name,
         title: val.title,
+        profession: this.selectedProfession(),
         avatarUrl: val.avatarUrl,
         clinicOrSchoolName: val.clinicOrSchoolName,
         location: val.location,
         phone: val.phone,
         credentials: val.credentialsRaw.split(',').map((c) => c.trim()).filter(Boolean),
+        socialLinks: this.socialLinksList(),
         bio: val.bio,
         aboutDetailed: val.aboutDetailed,
         emergencyNotice: val.emergencyNotice || undefined,

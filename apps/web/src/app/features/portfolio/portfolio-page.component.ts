@@ -4,8 +4,10 @@ import { UpperCasePipe } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { UserProfile, ServiceItem } from '@profilease/types';
 import { ProfileService } from '@service/profile.service';
+import { CurrencyService } from '@service/currency.service';
 import { SharpBadgeComponent } from '@shared/components/sharp-badge.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
+import { SharpSelectComponent } from '@shared/components/sharp-select.component';
 import { BookingWidgetComponent } from './components/booking-widget.component';
 
 @Component({
@@ -15,6 +17,7 @@ import { BookingWidgetComponent } from './components/booking-widget.component';
     UpperCasePipe,
     SharpBadgeComponent,
     SharpIconComponent,
+    SharpSelectComponent,
     BookingWidgetComponent,
   ],
   templateUrl: './portfolio-page.component.html',
@@ -24,6 +27,7 @@ export class PortfolioPageComponent implements OnInit {
   readonly slug = input<string>();
 
   protected readonly profileService = inject(ProfileService);
+  protected readonly currencyService = inject(CurrencyService);
   private readonly titleService = inject(Title);
 
   readonly selectedServiceId = signal<string>('');
