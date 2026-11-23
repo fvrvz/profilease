@@ -91,6 +91,16 @@
             </div>
           </div>
 
+          <!-- Avatar Photo Upload & Crop (Cloudflare R2) -->
+          <div class="border-t border-b border-neutral-200 py-4 my-2">
+            <app-sharp-image-uploader
+              [imageUrl]="profileState().avatarUrl"
+              (imageChanged)="onAvatarChange($event)"
+              label="Practitioner Portrait / Avatar Image"
+              requiredError="Avatar image is mandatory for your public profile. Please provide a Direct Image URL or Upload & Crop a photo."
+            />
+          </div>
+
           <!-- Short Bio -->
           <div>
             <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">

@@ -421,3 +421,60 @@ apiRouter.post('/appointments', async (req: Request, res: Response): Promise<voi
 
   res.status(201).json(created);
 });
+
+// ----------------------------------------------------
+// 6. IMAGE UPLOAD & MEDIA STORAGE (R2 / LOCAL STORAGE)
+// ----------------------------------------------------
+const mediaCache = new Map<string, { buffer: Buffer; mimeType: string }>();
+
+interface UploadPayload {
+  readonly imageBase64?: string;
+  readonly filename?: string;
+  readonly mimeType?: string;
+}
+
+apiRouter.post('/upload', (req: Request, res: Response): void => {
+  const body = req.body as UploadPayload | undefined;
+  if (!body || !body.imageBase64) {
+    res.status(400).json({ error: 'Missing imageBase64 payload.' });
+    return;
+  }
+
+  const raw = body.imageBase64;
+  // Handle data:image/png;base64,... header if present
+  const matches = raw.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+  const mimeType = matches ? matches[1] : (body.mimeType || 'image/jpeg');
+  const base64Data = matches ? matches[2] : raw;
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  const extension = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+  const fileKey = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${extension}`;
+
+  mediaCache.set(fileKey, { buffer, mimeType });
+
+  const origin = `${req.protocol}://${req.get('host')}`;
+  const mediaUrl = `${origin}/api/media/${fileKey}`;
+
+  res.status(201).json({
+    success: true,
+    key: fileKey,
+    url: mediaUrl,
+    sizeBytes: buffer.length,
+    mimeType,
+  });
+});
+
+apiRouter.get('/media/:key', (req: Request, res: Response): void => {
+  const key = req.params['key'];
+  const media = mediaCache.get(key);
+
+  if (!media) {
+    res.status(404).json({ error: `Media asset '${key}' not found.` });
+    return;
+  }
+
+  res.setHeader('Content-Type', media.mimeType);
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.send(media.buffer);
+});
+

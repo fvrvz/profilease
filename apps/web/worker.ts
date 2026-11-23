@@ -4,10 +4,13 @@ import { Resend } from 'resend';
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
+  STORAGE?: R2Bucket;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
   NODE_ENV?: string;
 }
+
+const mediaCacheWorker = new Map<string, { buffer: Uint8Array; mimeType: string }>();
 
 interface ProfileRow {
   id: string;
@@ -378,6 +381,132 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     return new Response(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
+  }
+
+  // --- PUT /api/client/profile (Update practitioner profile in D1) ---
+  if (path === '/api/client/profile' && method === 'PUT') {
+    const body = await request.json<{
+      id?: string;
+      name?: string;
+      title?: string;
+      bio?: string;
+      avatarUrl?: string;
+      phone?: string;
+      location?: string;
+      clinicOrSchoolName?: string;
+      credentials?: string[];
+      emergencyNotice?: string;
+    }>().catch(() => ({}));
+
+    if (!body.id) {
+      return Response.json({ error: 'Missing profile ID in update body.' }, { status: 400 });
+    }
+
+    const current = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(body.id).first<ProfileRow>();
+    if (!current) {
+      return Response.json({ error: `Profile '${body.id}' not found.` }, { status: 404 });
+    }
+
+    const updatedName = body.name ?? current.name;
+    const updatedTitle = body.title ?? current.title;
+    const updatedBio = body.bio ?? current.bio;
+    const updatedAvatar = body.avatarUrl ?? current.avatar_url;
+    const updatedPhone = body.phone ?? current.phone;
+    const updatedCredentials = body.credentials ? JSON.stringify(body.credentials) : current.credentials;
+
+    await env.DB.prepare(`
+      UPDATE profiles
+      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, credentials = ?
+      WHERE id = ?
+    `).bind(updatedName, updatedTitle, updatedBio, updatedAvatar, updatedPhone, updatedCredentials, body.id).run();
+
+    const updatedRow = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(body.id).first<ProfileRow>();
+    if (!updatedRow) {
+      return Response.json({ error: 'Failed to retrieve updated profile' }, { status: 500 });
+    }
+
+    const formatted = await formatProfileWithRelations(updatedRow, env.DB);
+    return Response.json(formatted);
+  }
+
+  // --- POST /api/upload (Cloudflare R2 storage / fallback base64 image ingest) ---
+  if (path === '/api/upload' && method === 'POST') {
+    const body = await request.json<{
+      imageBase64?: string;
+      filename?: string;
+      mimeType?: string;
+    }>().catch(() => ({}));
+
+    if (!body.imageBase64) {
+      return Response.json({ error: 'Missing imageBase64 payload.' }, { status: 400 });
+    }
+
+    const raw = body.imageBase64;
+    const matches = raw.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    const mimeType = matches ? matches[1] : (body.mimeType || 'image/webp');
+    const base64Data = matches ? matches[2] : raw;
+
+    // Convert base64 to Uint8Array binary
+    const binaryString = atob(base64Data);
+    const buffer = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      buffer[i] = binaryString.charCodeAt(i);
+    }
+
+    const extension = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+    const fileKey = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${extension}`;
+
+    // 1. Write to R2 Bucket if bound
+    if (env.STORAGE) {
+      await env.STORAGE.put(fileKey, buffer, {
+        httpMetadata: { contentType: mimeType },
+      });
+    }
+
+    // 2. Also keep in memory cache for immediate local/preview availability
+    mediaCacheWorker.set(fileKey, { buffer, mimeType });
+
+    const mediaUrl = `${url.origin}/api/media/${fileKey}`;
+    return Response.json(
+      {
+        success: true,
+        key: fileKey,
+        url: mediaUrl,
+        sizeBytes: buffer.byteLength,
+        mimeType,
+      },
+      { status: 201 }
+    );
+  }
+
+  // --- GET /api/media/:key (Serve media assets from R2 / cache) ---
+  if (path.startsWith('/api/media/') && method === 'GET') {
+    const key = path.replace('/api/media/', '').trim();
+
+    // 1. Try R2 bucket first
+    if (env.STORAGE) {
+      const object = await env.STORAGE.get(key);
+      if (object) {
+        const headers = new Headers();
+        headers.set('Content-Type', object.httpMetadata?.contentType || 'image/webp');
+        headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        headers.set('ETag', object.httpEtag);
+        return new Response(object.body, { headers });
+      }
+    }
+
+    // 2. Fallback to worker memory cache
+    const cached = mediaCacheWorker.get(key);
+    if (cached) {
+      return new Response(cached.buffer as unknown as BodyInit, {
+        headers: {
+          'Content-Type': cached.mimeType,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
+    }
+
+    return Response.json({ error: `Media asset '${key}' not found.` }, { status: 404 });
   }
 
   return Response.json({ error: 'Endpoint not found' }, { status: 404 });
