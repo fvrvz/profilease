@@ -1,9 +1,25 @@
-export type ProfessionType =
+export type KnownProfession =
   | 'doctor'
+  | 'nurse'
+  | 'engineer'
+  | 'developer'
   | 'teacher'
+  | 'student'
   | 'therapist'
   | 'coach'
-  | 'consultant';
+  | 'consultant'
+  | 'designer'
+  | 'lawyer'
+  | 'accountant'
+  | 'creator'
+  | 'artist'
+  | 'writer'
+  | 'researcher'
+  | 'architect'
+  | 'marketer'
+  | 'other';
+
+export type ProfessionType = KnownProfession | (string & {});
 
 export type ThemeVariant =
   | 'medical-teal'
@@ -31,8 +47,22 @@ export interface DayAvailability {
   readonly slotDurationMinutes: number;
 }
 
+export type SocialPlatform =
+  | 'linkedin'
+  | 'twitter'
+  | 'github'
+  | 'instagram'
+  | 'youtube'
+  | 'website'
+  | 'facebook'
+  | 'tiktok'
+  | 'threads'
+  | 'discord'
+  | 'email'
+  | (string & {});
+
 export interface SocialLink {
-  readonly platform: 'linkedin' | 'twitter' | 'github' | 'instagram' | 'website';
+  readonly platform: SocialPlatform;
   readonly url: string;
 }
 
