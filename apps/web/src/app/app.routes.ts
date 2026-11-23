@@ -17,6 +17,7 @@ export const atSlugMatcher: UrlMatcher = (segments: UrlSegment[]) => {
 export const appRoutes: Route[] = [
   {
     path: '',
+    title: 'Profilease — Professional Portfolios & Practice Booking',
     loadComponent: () =>
       import('@features/landing/landing-page.component').then(
         (m) => m.LandingPageComponent
@@ -25,6 +26,7 @@ export const appRoutes: Route[] = [
   // --- Admin Portal (Onboarding & Client Directory Only) ---
   {
     path: 'admin/login',
+    title: 'Sign In — Profilease Admin',
     loadComponent: () =>
       import('@features/admin/login/admin-login.component').then(
         (m) => m.AdminLoginComponent
@@ -40,6 +42,7 @@ export const appRoutes: Route[] = [
     children: [
       {
         path: '',
+        title: 'Clients Directory — Profilease Admin',
         loadComponent: () =>
           import('@features/admin/dashboard/admin-dashboard.component').then(
             (m) => m.AdminDashboardComponent
@@ -47,6 +50,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'onboard',
+        title: 'Onboard New Client — Profilease Admin',
         loadComponent: () =>
           import('@features/admin/onboard/admin-onboard.component').then(
             (m) => m.AdminOnboardComponent
@@ -54,6 +58,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'domains',
+        title: 'Domain Routing & DNS — Profilease Admin',
         loadComponent: () =>
           import('@features/admin/domains/admin-domains.component').then(
             (m) => m.AdminDomainsComponent
@@ -68,6 +73,7 @@ export const appRoutes: Route[] = [
   // --- Client Self-Service Portal (Appointments, Services, Timings, Availability) ---
   {
     path: 'portal/login',
+    title: 'Practitioner Portal Sign In — Profilease',
     loadComponent: () =>
       import('@features/portal/portal-login.component').then(
         (m) => m.PortalLoginComponent
@@ -83,6 +89,7 @@ export const appRoutes: Route[] = [
     children: [
       {
         path: '',
+        title: 'Appointments Dashboard — Client Portal',
         loadComponent: () =>
           import('@features/portal/portal-appointments.component').then(
             (m) => m.PortalAppointmentsComponent
@@ -90,6 +97,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'appointments',
+        title: 'Manage Appointments — Client Portal',
         loadComponent: () =>
           import('@features/portal/portal-appointments.component').then(
             (m) => m.PortalAppointmentsComponent
@@ -97,6 +105,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'services',
+        title: 'Service Catalog & Pricing — Client Portal',
         loadComponent: () =>
           import('@features/portal/portal-services.component').then(
             (m) => m.PortalServicesComponent
@@ -104,6 +113,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'availability',
+        title: 'Schedule & Availability — Client Portal',
         loadComponent: () =>
           import('@features/portal/portal-availability.component').then(
             (m) => m.PortalAvailabilityComponent
@@ -111,6 +121,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'profile',
+        title: 'My Profile & Branding — Client Portal',
         loadComponent: () =>
           import('@features/portal/portal-profile.component').then(
             (m) => m.PortalProfileComponent

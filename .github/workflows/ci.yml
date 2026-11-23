@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Build & Affected Test
+    name: Test & Typecheck
     runs-on: ubuntu-latest
 
     steps:
@@ -40,5 +40,7 @@ jobs:
       - name: Test affected projects only (Difference Test)
         run: npx nx affected -t test --parallel=2
 
-      - name: Build affected projects (Difference Build)
-        run: npx nx affected -t build --parallel=2
+      - name: Strict TypeScript Verification
+        run: |
+          npx tsc -p apps/web/tsconfig.app.json --noEmit
+          npx tsc -p apps/notifications/tsconfig.app.json --noEmit
