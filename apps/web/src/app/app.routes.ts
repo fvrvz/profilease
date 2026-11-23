@@ -1,6 +1,6 @@
 import { Route, UrlMatcher, UrlSegment } from '@angular/router';
-import { adminGuard } from './core/guards/admin.guard';
-import { clientGuard } from './core/guards/client.guard';
+import { adminGuard } from '@guards/admin.guard';
+import { clientGuard } from '@guards/client.guard';
 
 export const atSlugMatcher: UrlMatcher = (segments: UrlSegment[]) => {
   if (segments.length === 1 && segments[0].path.startsWith('@')) {
@@ -18,7 +18,7 @@ export const appRoutes: Route[] = [
   {
     path: '',
     loadComponent: () =>
-      import('./features/landing/landing-page.component').then(
+      import('@features/landing/landing-page.component').then(
         (m) => m.LandingPageComponent
       ),
   },
@@ -26,7 +26,7 @@ export const appRoutes: Route[] = [
   {
     path: 'admin/login',
     loadComponent: () =>
-      import('./features/admin/login/admin-login.component').then(
+      import('@features/admin/login/admin-login.component').then(
         (m) => m.AdminLoginComponent
       ),
   },
@@ -34,28 +34,28 @@ export const appRoutes: Route[] = [
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () =>
-      import('./features/admin/admin-layout.component').then(
+      import('@features/admin/admin-layout.component').then(
         (m) => m.AdminLayoutComponent
       ),
     children: [
       {
         path: '',
         loadComponent: () =>
-          import('./features/admin/dashboard/admin-dashboard.component').then(
+          import('@features/admin/dashboard/admin-dashboard.component').then(
             (m) => m.AdminDashboardComponent
           ),
       },
       {
         path: 'onboard',
         loadComponent: () =>
-          import('./features/admin/onboard/admin-onboard.component').then(
+          import('@features/admin/onboard/admin-onboard.component').then(
             (m) => m.AdminOnboardComponent
           ),
       },
       {
         path: 'domains',
         loadComponent: () =>
-          import('./features/admin/domains/admin-domains.component').then(
+          import('@features/admin/domains/admin-domains.component').then(
             (m) => m.AdminDomainsComponent
           ),
       },
@@ -69,7 +69,7 @@ export const appRoutes: Route[] = [
   {
     path: 'portal/login',
     loadComponent: () =>
-      import('./features/portal/portal-login.component').then(
+      import('@features/portal/portal-login.component').then(
         (m) => m.PortalLoginComponent
       ),
   },
@@ -77,42 +77,42 @@ export const appRoutes: Route[] = [
     path: 'portal',
     canActivate: [clientGuard],
     loadComponent: () =>
-      import('./features/portal/portal-layout.component').then(
+      import('@features/portal/portal-layout.component').then(
         (m) => m.PortalLayoutComponent
       ),
     children: [
       {
         path: '',
         loadComponent: () =>
-          import('./features/portal/portal-appointments.component').then(
+          import('@features/portal/portal-appointments.component').then(
             (m) => m.PortalAppointmentsComponent
           ),
       },
       {
         path: 'appointments',
         loadComponent: () =>
-          import('./features/portal/portal-appointments.component').then(
+          import('@features/portal/portal-appointments.component').then(
             (m) => m.PortalAppointmentsComponent
           ),
       },
       {
         path: 'services',
         loadComponent: () =>
-          import('./features/portal/portal-services.component').then(
+          import('@features/portal/portal-services.component').then(
             (m) => m.PortalServicesComponent
           ),
       },
       {
         path: 'availability',
         loadComponent: () =>
-          import('./features/portal/portal-availability.component').then(
+          import('@features/portal/portal-availability.component').then(
             (m) => m.PortalAvailabilityComponent
           ),
       },
       {
         path: 'profile',
         loadComponent: () =>
-          import('./features/portal/portal-profile.component').then(
+          import('@features/portal/portal-profile.component').then(
             (m) => m.PortalProfileComponent
           ),
       },
@@ -122,14 +122,14 @@ export const appRoutes: Route[] = [
   {
     matcher: atSlugMatcher,
     loadComponent: () =>
-      import('./features/portfolio/portfolio-page.component').then(
+      import('@features/portfolio/portfolio-page.component').then(
         (m) => m.PortfolioPageComponent
       ),
   },
   {
     path: 'p/:slug',
     loadComponent: () =>
-      import('./features/portfolio/portfolio-page.component').then(
+      import('@features/portfolio/portfolio-page.component').then(
         (m) => m.PortfolioPageComponent
       ),
   },

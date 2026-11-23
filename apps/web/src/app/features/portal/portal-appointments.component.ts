@@ -1,10 +1,10 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppointmentStatus, AppointmentBooking } from '@profilease/types';
-import { AppointmentService } from '../../core/services/appointment.service';
-import { ClientAuthService } from '../../core/services/client-auth.service';
-import { SharpBadgeComponent, BadgeVariant } from '../../shared/components/sharp-badge.component';
-import { SharpIconComponent } from '../../shared/components/sharp-icon.component';
+import { AppointmentService } from '@service/appointment.service';
+import { ClientAuthService } from '@service/client-auth.service';
+import { SharpBadgeComponent, BadgeVariant } from '@shared/components/sharp-badge.component';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
 @Component({
   selector: 'app-portal-appointments',

@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { AdminAuthService } from '../../core/services/admin-auth.service';
-import { SharpIconComponent } from '../../shared/components/sharp-icon.component';
+import { AdminAuthService } from '@service/admin-auth.service';
+import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
 @Component({
   selector: 'app-admin-layout',
