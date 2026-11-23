@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: profilease-rabbitmq
+    ports:
+      - '5672:5672'   # AMQP protocol port
+      - '15672:15672' # RabbitMQ Management Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - profilease-net
+
+  notifications:
+    build:
+      context: .
+      dockerfile: Dockerfile.notifications
+    container_name: profilease-notifications
+    ports:
+      - '3333:3333'
+    environment:
+      NODE_ENV: production
+      PORT: 3333
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - profilease-net
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profilease-web
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      NOTIFICATION_SERVICE_URL: http://notifications:3333/api/notifications/dispatch
+    depends_on:
+      - notifications
+    networks:
+      - profilease-net
+
+networks:
+  profilease-net:
+    driver: bridge
