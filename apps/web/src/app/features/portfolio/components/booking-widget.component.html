@@ -1,0 +1,345 @@
+<div id="booking-section" class="bg-white border-2 border-neutral-900 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 md:p-8">
+      <!-- Header -->
+      <div class="border-b-2 border-neutral-900 pb-5 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="inline-block w-2.5 h-2.5 bg-neutral-900"></span>
+            <span class="text-xs font-mono font-bold tracking-widest uppercase text-neutral-500">Live Scheduling Engine</span>
+          </div>
+          <h2 class="text-xl md:text-2xl font-black uppercase tracking-tight text-neutral-900">
+            Book Appointment
+          </h2>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="flex items-center gap-1.5 text-xs font-mono uppercase">
+          <span
+            class="px-2.5 py-1 border border-neutral-900"
+            [class.bg-neutral-900]="step() === 1"
+            [class.text-white]="step() === 1"
+            [class.bg-neutral-100]="step() !== 1"
+          >01 Service</span>
+          <span class="text-neutral-400">/</span>
+          <span
+            class="px-2.5 py-1 border border-neutral-900"
+            [class.bg-neutral-900]="step() === 2"
+            [class.text-white]="step() === 2"
+            [class.bg-neutral-100]="step() !== 2"
+          >02 Slot</span>
+          <span class="text-neutral-400">/</span>
+          <span
+            class="px-2.5 py-1 border border-neutral-900"
+            [class.bg-neutral-900]="step() === 3"
+            [class.text-white]="step() === 3"
+            [class.bg-neutral-100]="step() !== 3"
+          >03 Details</span>
+          <span class="text-neutral-400">/</span>
+          <span
+            class="px-2.5 py-1 border border-neutral-900"
+            [class.bg-emerald-600]="step() === 4"
+            [class.text-white]="step() === 4"
+            [class.bg-neutral-100]="step() !== 4"
+          >04 Confirmed</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: Select Service & Date -->
+      @if (step() === 1) {
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-800 mb-3 flex items-center gap-2">
+            <app-sharp-icon name="briefcase" customClass="w-4 h-4 text-neutral-700" />
+            1. Select Consultation or Service
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+            @for (srv of profile().services; track srv.id) {
+              <div
+                (click)="selectedServiceId.set(srv.id)"
+                class="p-4 border-2 transition-all cursor-pointer select-none"
+                [class.border-neutral-900]="selectedServiceId() === srv.id"
+                [class.bg-neutral-900]="selectedServiceId() === srv.id"
+                [class.text-white]="selectedServiceId() === srv.id"
+                [class.border-neutral-200]="selectedServiceId() !== srv.id"
+                [class.hover:border-neutral-400]="selectedServiceId() !== srv.id"
+              >
+                <div class="flex items-start justify-between gap-2 mb-1">
+                  <span class="font-bold text-sm uppercase">{{ srv.title }}</span>
+                  <span
+                    class="font-mono font-bold text-xs px-2 py-0.5 border"
+                    [class.border-white]="selectedServiceId() === srv.id"
+                    [class.border-neutral-900]="selectedServiceId() !== srv.id"
+                    [class.bg-white]="selectedServiceId() !== srv.id"
+                    [class.text-neutral-900]="selectedServiceId() !== srv.id"
+                  >\${{ srv.price }}</span>
+                </div>
+                <p class="text-xs line-clamp-2 opacity-80 mb-2">{{ srv.description }}</p>
+                <div class="flex items-center gap-3 text-[11px] font-mono">
+                  <span class="flex items-center gap-1">
+                    <app-sharp-icon name="clock" customClass="w-3 h-3" />
+                    {{ srv.durationMinutes }} min
+                  </span>
+                  <span class="opacity-60">• {{ srv.category }}</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-800 mb-3 flex items-center gap-2">
+            <app-sharp-icon name="calendar" customClass="w-4 h-4 text-neutral-700" />
+            2. Choose Date
+          </h3>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 mb-6">
+            @for (opt of availableDates(); track opt.dateString) {
+              <button
+                type="button"
+                [disabled]="!opt.enabled"
+                (click)="selectDate(opt.dateString)"
+                class="p-2.5 text-center border transition-all cursor-pointer select-none disabled:opacity-30 disabled:cursor-not-allowed"
+                [class.border-neutral-900]="selectedDate() === opt.dateString"
+                [class.bg-neutral-900]="selectedDate() === opt.dateString"
+                [class.text-white]="selectedDate() === opt.dateString"
+                [class.border-neutral-200]="selectedDate() !== opt.dateString && opt.enabled"
+                [class.hover:border-neutral-900]="selectedDate() !== opt.dateString && opt.enabled"
+              >
+                <div class="text-[10px] font-mono uppercase opacity-75">{{ opt.dayName.slice(0, 3) }}</div>
+                <div class="text-xs font-bold font-mono mt-0.5">{{ opt.displayMonthDay }}</div>
+              </button>
+            }
+          </div>
+
+          <div class="flex justify-end pt-4 border-t border-neutral-200">
+            <app-sharp-button
+              variant="primary"
+              [disabled]="!selectedServiceId() || !selectedDate()"
+              (btnClick)="goToStep(2)"
+            >
+              Continue to Time Slots →
+            </app-sharp-button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 2: Pick Time Slot -->
+      @if (step() === 2) {
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-2">
+              <app-sharp-icon name="clock" customClass="w-4 h-4 text-neutral-700" />
+              Available Slots for {{ selectedDateDisplay() }}
+            </h3>
+            <button
+              type="button"
+              (click)="goToStep(1)"
+              class="text-xs font-mono underline hover:text-neutral-600"
+            >
+              ← Change Date or Service
+            </button>
+          </div>
+
+          @if (availableTimeSlots().length === 0) {
+            <div class="p-8 text-center border-2 border-dashed border-neutral-300 text-neutral-500 font-mono text-xs">
+              No available appointment slots on this date. Please pick another date.
+            </div>
+          } @else {
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 mb-6">
+              @for (slot of availableTimeSlots(); track slot) {
+                <button
+                  type="button"
+                  (click)="selectedTimeSlot.set(slot)"
+                  class="p-3 text-center border-2 font-mono text-xs font-bold transition-all cursor-pointer select-none"
+                  [class.border-neutral-900]="selectedTimeSlot() === slot"
+                  [class.bg-neutral-900]="selectedTimeSlot() === slot"
+                  [class.text-white]="selectedTimeSlot() === slot"
+                  [class.border-neutral-200]="selectedTimeSlot() !== slot"
+                  [class.hover:border-neutral-900]="selectedTimeSlot() !== slot"
+                >
+                  {{ slot }}
+                </button>
+              }
+            </div>
+          }
+
+          <div class="flex items-center justify-between pt-4 border-t border-neutral-200">
+            <app-sharp-button variant="secondary" (btnClick)="goToStep(1)">
+              ← Back
+            </app-sharp-button>
+            <app-sharp-button
+              variant="primary"
+              [disabled]="!selectedTimeSlot()"
+              (btnClick)="goToStep(3)"
+            >
+              Enter Patient / Client Info →
+            </app-sharp-button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 3: Client Info & Signal Form -->
+      @if (step() === 3) {
+        <div>
+          <!-- Booking summary banner -->
+          <div class="bg-neutral-100 border border-neutral-300 p-4 mb-6 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+            <div>
+              <span class="text-neutral-500 uppercase">Service:</span>
+              <strong class="ml-1 uppercase text-neutral-900">{{ selectedService()?.title }}</strong>
+            </div>
+            <div>
+              <span class="text-neutral-500 uppercase">Date & Time:</span>
+              <strong class="ml-1 text-neutral-900">{{ selectedDate() }} at {{ selectedTimeSlot() }}</strong>
+            </div>
+            <div>
+              <span class="text-neutral-500 uppercase">Fee:</span>
+              <strong class="ml-1 text-neutral-900">\${{ selectedService()?.price }}</strong>
+            </div>
+          </div>
+
+          <form (submit)="onSubmitBooking($event)" novalidate class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Full Name -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  [formField]="bookingForm.clientName"
+                  placeholder="e.g. Johnathan Doe"
+                  class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
+                />
+                @if (bookingForm.clientName().invalid() && bookingForm.clientName().touched()) {
+                  <p class="text-[11px] text-red-600 font-mono mt-1">
+                    {{ bookingForm.clientName().errors()[0]?.message || 'Full Name is required' }}
+                  </p>
+                }
+              </div>
+
+              <!-- Email Address -->
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  [formField]="bookingForm.clientEmail"
+                  placeholder="name@example.com"
+                  class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
+                />
+                @if (bookingForm.clientEmail().invalid() && bookingForm.clientEmail().touched()) {
+                  <p class="text-[11px] text-red-600 font-mono mt-1">
+                    {{ bookingForm.clientEmail().errors()[0]?.message || 'Valid email is required' }}
+                  </p>
+                }
+              </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                [formField]="bookingForm.clientPhone"
+                placeholder="+1 (555) 000-0000"
+                class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
+              />
+              @if (bookingForm.clientPhone().invalid() && bookingForm.clientPhone().touched()) {
+                <p class="text-[11px] text-red-600 font-mono mt-1">
+                  {{ bookingForm.clientPhone().errors()[0]?.message || 'Phone number is required' }}
+                </p>
+              }
+            </div>
+
+            <!-- Reason / Consultation Notes -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                Reason for Visit / Specific Inquiries
+              </label>
+              <textarea
+                [formField]="bookingForm.notes"
+                rows="3"
+                placeholder="Briefly state symptoms, topic, questions, or goals..."
+                class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
+              ></textarea>
+            </div>
+
+            @if (appointmentService.errorMessage()) {
+              <div class="p-3 bg-red-50 border border-red-300 text-red-700 text-xs font-mono">
+                {{ appointmentService.errorMessage() }}
+              </div>
+            }
+
+            <div class="flex items-center justify-between pt-4 border-t border-neutral-200">
+              <app-sharp-button variant="secondary" (btnClick)="goToStep(2)">
+                ← Back
+              </app-sharp-button>
+              <app-sharp-button
+                variant="primary"
+                type="submit"
+                [loading]="appointmentService.isSubmitting()"
+                [disabled]="bookingForm().invalid()"
+              >
+                Confirm Appointment →
+              </app-sharp-button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- STEP 4: Confirmation Ticket -->
+      @if (step() === 4 && confirmedBooking()) {
+        <div class="text-center py-6">
+          <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 text-emerald-800 border-2 border-emerald-800 mb-4">
+            <app-sharp-icon name="check" customClass="w-8 h-8" />
+          </div>
+
+          <span class="inline-block px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-mono uppercase tracking-widest font-bold mb-2">
+            Appointment Requested & Logged
+          </span>
+
+          <h3 class="text-2xl font-black uppercase tracking-tight text-neutral-900 mb-2">
+            You're All Set, {{ confirmedBooking()?.clientName }}!
+          </h3>
+          <p class="text-xs text-neutral-600 max-w-md mx-auto mb-6">
+            A real-time confirmation receipt has been dispatched to your email (<strong>{{ confirmedBooking()?.clientEmail }}</strong>) and WhatsApp. The practitioner has received an instant 1-click notification alert.
+          </p>
+
+          <!-- Sharp Ticket Box -->
+          <div class="max-w-md mx-auto bg-neutral-50 border-2 border-neutral-900 p-5 text-left font-mono text-xs mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div class="border-b border-neutral-300 pb-3 mb-3 flex items-center justify-between">
+              <span class="text-neutral-500 uppercase text-[10px]">Reference Code</span>
+              <span class="font-bold text-neutral-900">{{ confirmedBooking()?.id }}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <span class="text-neutral-500 uppercase text-[10px] block">Provider</span>
+                <span class="font-bold text-neutral-900">{{ profile().name }}</span>
+              </div>
+              <div>
+                <span class="text-neutral-500 uppercase text-[10px] block">Service</span>
+                <span class="font-bold text-neutral-900">{{ confirmedBooking()?.serviceTitle }}</span>
+              </div>
+              <div>
+                <span class="text-neutral-500 uppercase text-[10px] block">Date</span>
+                <span class="font-bold text-neutral-900">{{ confirmedBooking()?.appointmentDate }}</span>
+              </div>
+              <div>
+                <span class="text-neutral-500 uppercase text-[10px] block">Time Slot</span>
+                <span class="font-bold text-neutral-900">{{ confirmedBooking()?.appointmentTime }}</span>
+              </div>
+            </div>
+            <div class="border-t border-neutral-300 pt-3">
+              <span class="text-neutral-500 uppercase text-[10px] block">Location / Mode</span>
+              <span class="text-neutral-800">{{ profile().location }}</span>
+            </div>
+          </div>
+
+          <div class="flex justify-center gap-3">
+            <app-sharp-button variant="outline" (btnClick)="resetBooking()">
+              Schedule Another
+            </app-sharp-button>
+          </div>
+        </div>
+      }
+    </div>
