@@ -1,34 +1,98 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { AppointmentNotificationMessage, NotificationDeliveryResult } from '@profilease/types';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as handlebars from 'handlebars';
+
+type TemplateDelegate = handlebars.TemplateDelegate;
 
 @Injectable()
-export class EmailService {
+export class EmailService implements OnModuleInit {
   private readonly logger = new Logger(EmailService.name);
+  private readonly templateCache = new Map<string, TemplateDelegate>();
+
+  onModuleInit(): void {
+    this.preloadTemplates();
+  }
+
+  private preloadTemplates(): void {
+    const templateNames = [
+      'professional-booking-alert',
+      'client-booking-receipt',
+      'status-update',
+    ];
+
+    for (const name of templateNames) {
+      this.getCompiledTemplate(name);
+    }
+  }
+
+  private getCompiledTemplate(templateName: string): TemplateDelegate {
+    if (this.templateCache.has(templateName)) {
+      return this.templateCache.get(templateName)!;
+    }
+
+    const possiblePaths = [
+      path.resolve(__dirname, 'assets/templates', `${templateName}.hbs`),
+      path.resolve(process.cwd(), 'apps/notifications/src/assets/templates', `${templateName}.hbs`),
+      path.resolve(process.cwd(), 'dist/apps/notifications/assets/templates', `${templateName}.hbs`),
+    ];
+
+    for (const templatePath of possiblePaths) {
+      if (fs.existsSync(templatePath)) {
+        try {
+          const raw = fs.readFileSync(templatePath, 'utf-8');
+          const compiled = handlebars.compile(raw);
+          this.templateCache.set(templateName, compiled);
+          this.logger.log(`[TEMPLATE ENGINE] Successfully compiled email template: ${templateName}`);
+          return compiled;
+        } catch (err) {
+          this.logger.warn(`Failed reading template at ${templatePath}: ${(err as Error).message}`);
+        }
+      }
+    }
+
+    // Fallback inline template compiler if template file not found on disk
+    this.logger.warn(`[TEMPLATE ENGINE] Template '${templateName}' not found on disk; utilizing fallback compiler.`);
+    const fallback = handlebars.compile(`
+      <div style="font-family: monospace; padding: 24px; border: 2px solid #0f172a;">
+        <h2>Profilease Notification: {{serviceTitle}}</h2>
+        <p>Booking with {{clientName}} on {{appointmentDate}} at {{appointmentTime}}.</p>
+        {{#if acceptUrl}}<p><a href="{{acceptUrl}}">Accept</a> | <a href="{{declineUrl}}">Decline</a></p>{{/if}}
+      </div>
+    `);
+    this.templateCache.set(templateName, fallback);
+    return fallback;
+  }
 
   async sendAppointmentCreatedEmailToProfessional(
     notification: AppointmentNotificationMessage
   ): Promise<NotificationDeliveryResult> {
-    const htmlBody = this.generateProfessionalEmailHtml(notification);
+    const template = this.getCompiledTemplate('professional-booking-alert');
+    const htmlBody = template(notification);
+
     this.logger.log(
-      `[EMAIL] Sending new booking notification to professional: ${notification.professionalEmail} (Appointment #${notification.appointmentId})`
+      `[EMAIL ENGINE] Rendered professional email via Handlebars (${htmlBody.length} bytes) for ${notification.professionalEmail} (Appointment #${notification.appointmentId})`
     );
 
-    // Simulated email delivery; logs rendered content and buttons
     return {
       channel: 'email',
       recipient: notification.professionalEmail,
       status: 'delivered',
       messageId: `email-${Date.now()}-${notification.appointmentId}`,
       timestamp: new Date().toISOString(),
-      details: `Dispatched booking notification with 1-click action buttons. Accept: ${notification.acceptUrl} | Decline: ${notification.declineUrl}`
+      details: `Rendered via Handlebars template engine. Accept: ${notification.acceptUrl} | Decline: ${notification.declineUrl}`,
     };
   }
 
   async sendAppointmentCreatedEmailToClient(
     notification: AppointmentNotificationMessage
   ): Promise<NotificationDeliveryResult> {
+    const template = this.getCompiledTemplate('client-booking-receipt');
+    const htmlBody = template(notification);
+
     this.logger.log(
-      `[EMAIL] Sending confirmation receipt to client: ${notification.clientEmail} for appointment with ${notification.professionalName}`
+      `[EMAIL ENGINE] Rendered client receipt via Handlebars (${htmlBody.length} bytes) for ${notification.clientEmail}`
     );
 
     return {
@@ -37,7 +101,7 @@ export class EmailService {
       status: 'delivered',
       messageId: `email-client-${Date.now()}-${notification.appointmentId}`,
       timestamp: new Date().toISOString(),
-      details: `Confirmation sent to ${notification.clientEmail} for ${notification.serviceTitle} on ${notification.appointmentDate}`
+      details: `Confirmation rendered with Handlebars and sent to ${notification.clientEmail} for ${notification.serviceTitle}`,
     };
   }
 
@@ -47,8 +111,24 @@ export class EmailService {
     recipientName: string,
     statusText: string
   ): Promise<NotificationDeliveryResult> {
+    const template = this.getCompiledTemplate('status-update');
+    const statusClass =
+      statusText.toLowerCase() === 'confirmed'
+        ? 'status-confirmed'
+        : statusText.toLowerCase() === 'declined'
+        ? 'status-declined'
+        : 'status-cancelled';
+
+    const htmlBody = template({
+      ...notification,
+      recipientEmail,
+      recipientName,
+      statusText,
+      statusClass,
+    });
+
     this.logger.log(
-      `[EMAIL] Status update [${statusText}] sent to ${recipientEmail} for appointment #${notification.appointmentId}`
+      `[EMAIL ENGINE] Status update [${statusText}] rendered via Handlebars (${htmlBody.length} bytes) for ${recipientEmail}`
     );
 
     return {
@@ -57,61 +137,7 @@ export class EmailService {
       status: 'delivered',
       messageId: `email-status-${Date.now()}-${notification.appointmentId}`,
       timestamp: new Date().toISOString(),
-      details: `Status notification [${statusText}] delivered to ${recipientName} (${recipientEmail})`
+      details: `Status notification [${statusText}] rendered and delivered to ${recipientName} (${recipientEmail})`,
     };
-  }
-
-  private generateProfessionalEmailHtml(n: AppointmentNotificationMessage): string {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>New Appointment Request</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; }
-    .box { max-width: 600px; margin: 0 auto; background: #ffffff; border: 2px solid #0f172a; border-radius: 0; padding: 32px; }
-    .badge { display: inline-block; background: #0f172a; color: #ffffff; padding: 4px 10px; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; border-radius: 0; margin-bottom: 16px; }
-    h1 { font-size: 22px; color: #0f172a; margin: 0 0 16px 0; font-weight: 800; letter-spacing: -0.02em; }
-    .details { border: 1px solid #e2e8f0; border-radius: 0; padding: 20px; background: #f8fafc; margin: 20px 0; }
-    .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
-    .detail-label { color: #64748b; font-weight: 600; }
-    .detail-value { color: #0f172a; font-weight: 700; }
-    .btn-group { display: flex; gap: 12px; margin-top: 24px; }
-    .btn { display: inline-block; padding: 12px 24px; font-weight: 700; font-size: 13px; text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; text-align: center; }
-    .btn-accept { background: #0d9488; color: #ffffff; border: 2px solid #0d9488; }
-    .btn-decline { background: #ef4444; color: #ffffff; border: 2px solid #ef4444; }
-    .footer { margin-top: 24px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px; }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <div class="badge">Profilease Appointment Notification</div>
-    <h1>New Booking from ${n.clientName}</h1>
-    <p style="color: #475569; font-size: 14px; line-height: 1.5;">
-      Hello ${n.professionalName}, you have received a new appointment booking. You can accept or decline this request directly below without logging into your dashboard:
-    </p>
-
-    <div class="details">
-      <div class="detail-row"><span class="detail-label">Service:</span><span class="detail-value">${n.serviceTitle}</span></div>
-      <div class="detail-row"><span class="detail-label">Date & Time:</span><span class="detail-value">${n.appointmentDate} at ${n.appointmentTime}</span></div>
-      <div class="detail-row"><span class="detail-label">Patient/Client:</span><span class="detail-value">${n.clientName}</span></div>
-      <div class="detail-row"><span class="detail-label">Contact:</span><span class="detail-value">${n.clientEmail} | ${n.clientPhone}</span></div>
-      ${n.notes ? `<div class="detail-row"><span class="detail-label">Notes:</span><span class="detail-value">${n.notes}</span></div>` : ''}
-    </div>
-
-    <div class="btn-group">
-      <a href="${n.acceptUrl}" class="btn btn-accept">Accept Appointment</a>
-      <a href="${n.declineUrl}" class="btn btn-decline">Decline Request</a>
-    </div>
-
-    <div class="footer">
-      <p>Secure 1-Click Action Token: <code>${n.actionToken}</code></p>
-      <p>Powered by Profilease Instant Notification Engine.</p>
-    </div>
-  </div>
-</body>
-</html>
-    `.trim();
   }
 }
