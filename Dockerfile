@@ -23,9 +23,6 @@ COPY . .
 ENV NODE_ENV=production
 RUN npx nx build web
 
-# Clean dev dependencies for lean runner image
-RUN npm prune --omit=dev
-
 # -------------------------------------------------------------
 # STAGE 3: Production Runner
 # -------------------------------------------------------------
@@ -39,8 +36,6 @@ ENV PORT=4000
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 profilease
 
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder --chown=profilease:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=profilease:nodejs /app/dist/apps/web ./dist/apps/web
 
 USER profilease
