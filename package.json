@@ -2,14 +2,51 @@
   "name": "@profilease/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
-  "private": true,
-  "dependencies": {},
-  "devDependencies": {
-    "@nx/js": "24.0.6",
-    "@nx/workspace": "24.0.6",
-    "nx": "24.0.6",
-    "typescript": "~6.0.3"
+  "scripts": {
+    "start": "node dist/apps/web/server/server.mjs",
+    "dev": "nx serve web",
+    "build": "nx build web",
+    "test": "nx test web",
+    "test:affected": "nx affected -t test",
+    "build:affected": "nx affected -t build"
   },
-  "packageManager": "npm@11.12.1"
+  "private": true,
+  "devDependencies": {
+    "@angular-devkit/core": "~22.2.0",
+    "@angular-devkit/schematics": "~22.2.0",
+    "@angular/build": "~22.2.0",
+    "@angular/cli": "~22.2.0",
+    "@angular/compiler-cli": "~22.2.0",
+    "@angular/language-service": "~22.2.0",
+    "@nx/angular": "^24.0.6",
+    "@nx/js": "24.0.6",
+    "@nx/web": "24.0.6",
+    "@nx/workspace": "24.0.6",
+    "@schematics/angular": "~22.2.0",
+    "@swc/helpers": "~0.5.18",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "jsdom": "^27.1.0",
+    "nx": "24.0.6",
+    "postcss": "^8.5.33",
+    "tailwindcss": "^4.3.5",
+    "tslib": "^2.3.0",
+    "typescript": "~6.0.3",
+    "vitest": "^4.0.8"
+  },
+  "packageManager": "npm@11.12.1",
+  "dependencies": {
+    "@angular-devkit/build-angular": "~22.2.0",
+    "@angular/common": "~22.2.0",
+    "@angular/compiler": "~22.2.0",
+    "@angular/core": "~22.2.0",
+    "@angular/forms": "~22.2.0",
+    "@angular/platform-browser": "~22.2.0",
+    "@angular/platform-server": "~22.2.0",
+    "@angular/router": "~22.2.0",
+    "@angular/ssr": "~22.2.0",
+    "express": "^4.21.2",
+    "rxjs": "~7.8.0"
+  }
 }

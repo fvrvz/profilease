@@ -1,96 +1,107 @@
-# Profilease
+# Profilease ⚡
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+**Bespoke Portfolio & Booking Engine for Doctors, Teachers, and Professionals.**
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+Built on **Angular v22** with Zoneless Signal Architecture, **Signal Forms (`@angular/forms/signals`)**, strictly typed TypeScript, and an **Inbuilt Angular SSR Backend** with Multi-Tenant Custom Domain Resolution.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+---
 
-## Run tasks
+## 🚀 Features
 
-To run tasks with Nx use:
+- **Architectural Pointy Aesthetic**: Strict zero rounded corners (`border-radius: 0px !important;`), high-contrast neo-brutalist cards, crisp typography, and sharp badges.
+- **Dynamic Portfolio Presets**:
+  - **Medical & Healthcare**: Clinical credentials, emergency notice banners, specialized consultations, clinic hours.
+  - **Academic & Education**: Faculty honors, course mentorship cards, research guidance, academic calendar.
+  - **Executive & Wellness**: Obsidian & warm amber themes for coaches and consultants.
+- **Signal Forms Scheduling Engine**:
+  - Built using Angular v22 `@angular/forms/signals` (`form()`, `FormField`, `required`, `email`).
+  - Interactive date picker, slot calculation based on weekly availability, patient/student intake form, and instant confirmation receipt.
+- **Admin Control Room (`/admin`)**:
+  - Role-guarded via functional `adminGuard`.
+  - Client Onboarding Wizard: Step-by-step onboarding for new practitioners.
+  - Appointment Management: Filter, approve, cancel, or complete bookings.
+  - Custom Domains Manager: Manage and verify client custom domain host mappings.
+- **Inbuilt Backend with Host Header Mapping**:
+  - Runs in Angular's SSR server (`apps/web/src/server.ts`) via Express.
+  - Inspects incoming `Host` header (e.g., `drelenavance.com`) to serve the client's portfolio transparently as an independent website.
+- **Zero `any` TypeScript**: Strict type safety end-to-end with shared models in `@profilease/types`.
 
-```sh
-npx nx <target> <project-name>
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+- Node.js 22+
+- npm 10+
+
+### Installation & Local Development
+
+```bash
+# Install dependencies
+npm ci
+
+# Start development server
+npm run dev
+
+# Or build and start the SSR production server with built-in API
+npm run build
+npm start
 ```
 
-For example:
+Navigate to:
+- Public Showcase & Directory: `http://localhost:4000/`
+- Dr. Vance's Medical Profile: `http://localhost:4000/@dr-elena-vance`
+- Prof. Chen's Academic Profile: `http://localhost:4000/@prof-marcus-chen`
+- Admin Portal: `http://localhost:4000/admin` *(Login: `admin@profilease.io` / `admin123`)*
 
-```sh
-npx nx build myproject
+---
+
+## 🧪 Testing
+
+```bash
+# Run unit tests
+npm test
+
+# Run affected tests only (Difference Test)
+npm run test:affected
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+---
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 🐳 Docker Deployment
 
-## Add new projects
+A multi-stage, lightweight production Dockerfile is included:
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+```bash
+# Build the production Docker image
+docker build -t profilease .
 
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
+# Run the container
+docker run -d -p 4000:4000 --name profilease profilease
 ```
 
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
+The container runs as an unprivileged non-root user (`profilease:1001`) with an integrated healthcheck endpoint.
 
-```sh
-# Generate an app
-npx nx g @nx/react:app demo
+---
 
-# Generate a library
-npx nx g @nx/react:lib some-lib
-```
+## 🌐 Custom Domain Setup for Clients
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+To point an external domain (e.g. `drelenavance.com`) to a client's Profilease website:
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+1. **CNAME Record (Subdomain)**:
+   - Type: `CNAME`
+   - Host: `www` or `clinic`
+   - Target: `profilease.io`
+2. **A Record (Root/Apex Domain)**:
+   - Type: `A`
+   - Host: `@`
+   - Target: `YOUR_SERVER_IP`
 
-## Set up CI!
+The internal host-header resolution middleware inspects the request hostname and automatically renders the client's portfolio on the root route `/`.
 
-### Step 1
+---
 
-To connect to Nx Cloud, run the following command:
+## 🔄 GitHub Actions Workflows
 
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- **`.github/workflows/ci.yml`**: Automatically runs on push/PR, installs dependencies, calculates git SHA diff, tests **affected projects only** to save CI time, and validates the build.
+- **`.github/workflows/deploy-pages.yml`**: Automatically builds the browser client with SPA routing fallback (`404.html`) and deploys to **GitHub Pages**.
