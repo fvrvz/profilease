@@ -53,4 +53,10 @@ profilease-data.json
 vitest.config.*.timestamp*
 .vitest
 
-profilease-data.json
+# Environment & Secrets (Never commit actual env files)
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+!apps/*/.env.example

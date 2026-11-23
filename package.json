@@ -69,6 +69,7 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/microservices": "^11.2.11",
+    "@nestjs/observe": "^0.3.27",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/terminus": "^11.1.1",
     "amqp-connection-manager": "^5.0.1",
