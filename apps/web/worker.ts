@@ -7,6 +7,8 @@ export interface Env {
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
   NODE_ENV?: string;
+  ADMIN_EMAIL?: string;
+  ADMIN_PASSWORD?: string;
   // Tigris S3-compatible storage credentials (set as Worker secrets)
   TIGRIS_ACCESS_KEY_ID?: string;
   TIGRIS_SECRET_ACCESS_KEY?: string;
@@ -175,6 +177,153 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     return Response.json(profile);
   }
 
+  // --- POST /api/profiles (Admin onboard client profile) ---
+  if (path === '/api/profiles' && method === 'POST') {
+    const body = await request.json<{
+      id?: string;
+      slug?: string;
+      name?: string;
+      profession?: string;
+      title?: string;
+      bio?: string;
+      avatarUrl?: string;
+      theme?: string;
+      customDomain?: string | null;
+      clientAccessKey?: string;
+      email?: string;
+      phone?: string;
+      country?: string;
+      currency?: string;
+      timezone?: string;
+      credentials?: string[];
+      socialLinks?: Array<{ platform: string; url: string }>;
+      services?: Array<{ id?: string; name: string; description?: string; durationMinutes?: number; price?: number; isActive?: boolean }>;
+      availability?: Array<{ id?: string; dayOfWeek: string; enabled: boolean; startTime?: string; endTime?: string }>;
+    }>().catch(() => ({}));
+
+    if (!body || !body.name || !body.slug || !body.profession) {
+      return Response.json({ error: 'Missing required profile fields (name, slug, profession)' }, { status: 400 });
+    }
+
+    const existing = await env.DB.prepare('SELECT id FROM profiles WHERE slug = ?').bind(body.slug).first();
+    if (existing) {
+      return Response.json({ error: `A profile with slug '${body.slug}' already exists.` }, { status: 409 });
+    }
+
+    const id = body.id || `prof-${Date.now()}`;
+    const slug = body.slug;
+    const name = body.name;
+    const profession = body.profession;
+    const title = body.title || '';
+    const bio = body.bio || '';
+    const avatarUrl = body.avatarUrl || '';
+    const theme = body.theme || 'medical-teal';
+    const customDomain = body.customDomain || null;
+    const clientAccessKey = body.clientAccessKey || Math.random().toString(36).substring(2, 10);
+    const email = body.email || '';
+    const phone = body.phone || '';
+    const country = body.country || 'United States';
+    const currency = body.currency || 'USD';
+    const timezone = body.timezone || 'UTC';
+    const credentials = JSON.stringify(body.credentials || []);
+    const socialLinks = JSON.stringify(body.socialLinks || []);
+
+    await env.DB.prepare(`
+      INSERT INTO profiles (id, slug, name, profession, title, bio, avatar_url, theme, custom_domain, client_access_key, email, phone, country, currency, timezone, credentials, social_links)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, slug, name, profession, title, bio, avatarUrl, theme, customDomain, clientAccessKey, email, phone, country, currency, timezone, credentials, socialLinks).run();
+
+    if (Array.isArray(body.services)) {
+      for (const s of body.services) {
+        const sId = s.id || `srv-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        await env.DB.prepare(`
+          INSERT INTO services (id, profile_id, name, description, duration_minutes, price, is_active)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(sId, id, s.name, s.description || '', s.durationMinutes || 30, s.price || 0, s.isActive !== false ? 1 : 0).run();
+      }
+    }
+
+    if (Array.isArray(body.availability)) {
+      for (const a of body.availability) {
+        const aId = a.id || `avail-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        await env.DB.prepare(`
+          INSERT INTO availabilities (id, profile_id, day_of_week, enabled, start_time, end_time)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(aId, id, a.dayOfWeek, a.enabled ? 1 : 0, a.startTime || '09:00', a.endTime || '17:00').run();
+      }
+    }
+
+    const createdRow = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(id).first<ProfileRow>();
+    if (!createdRow) {
+      return Response.json({ error: 'Failed to create profile' }, { status: 500 });
+    }
+    const createdProfile = await formatProfileWithRelations(createdRow, env.DB);
+    return Response.json(createdProfile, { status: 201 });
+  }
+
+  // --- PUT /api/profiles/:id (Admin update profile) ---
+  if (path.startsWith('/api/profiles/') && method === 'PUT') {
+    const id = path.replace('/api/profiles/', '').trim();
+    const body = await request.json<{
+      name?: string;
+      title?: string;
+      bio?: string;
+      avatarUrl?: string;
+      phone?: string;
+      theme?: string;
+      customDomain?: string | null;
+      country?: string;
+      currency?: string;
+      timezone?: string;
+      credentials?: string[];
+      socialLinks?: Array<{ platform: string; url: string }>;
+    }>().catch(() => ({}));
+
+    const current = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(id).first<ProfileRow>();
+    if (!current) {
+      return Response.json({ error: `Profile with ID '${id}' not found.` }, { status: 404 });
+    }
+
+    const name = body.name ?? current.name;
+    const title = body.title ?? current.title;
+    const bio = body.bio ?? current.bio;
+    const avatarUrl = body.avatarUrl ?? current.avatar_url;
+    const phone = body.phone ?? current.phone;
+    const theme = body.theme ?? current.theme;
+    const customDomain = body.customDomain !== undefined ? body.customDomain : current.custom_domain;
+    const country = body.country ?? current.country;
+    const currency = body.currency ?? current.currency;
+    const timezone = body.timezone ?? current.timezone;
+    const credentials = body.credentials !== undefined ? JSON.stringify(body.credentials) : current.credentials;
+    const socialLinks = body.socialLinks !== undefined ? JSON.stringify(body.socialLinks) : current.social_links;
+
+    await env.DB.prepare(`
+      UPDATE profiles
+      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, theme = ?, custom_domain = ?, country = ?, currency = ?, timezone = ?, credentials = ?, social_links = ?
+      WHERE id = ?
+    `).bind(name, title, bio, avatarUrl, phone, theme, customDomain, country, currency, timezone, credentials, socialLinks, id).run();
+
+    const updatedRow = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(id).first<ProfileRow>();
+    const updatedProfile = await formatProfileWithRelations(updatedRow!, env.DB);
+    return Response.json(updatedProfile);
+  }
+
+  // --- DELETE /api/profiles/:id (Admin delete profile) ---
+  if (path.startsWith('/api/profiles/') && method === 'DELETE') {
+    const id = path.replace('/api/profiles/', '').trim();
+    const current = await env.DB.prepare('SELECT id FROM profiles WHERE id = ?').bind(id).first();
+    if (!current) {
+      return Response.json({ error: `Profile with ID '${id}' not found.` }, { status: 404 });
+    }
+
+    await env.DB.prepare('DELETE FROM services WHERE profile_id = ?').bind(id).run();
+    await env.DB.prepare('DELETE FROM availabilities WHERE profile_id = ?').bind(id).run();
+    await env.DB.prepare('DELETE FROM appointments WHERE profile_id = ?').bind(id).run();
+    await env.DB.prepare('DELETE FROM profiles WHERE id = ?').bind(id).run();
+
+    return Response.json({ success: true, message: `Profile '${id}' deleted.` });
+  }
+
   // --- GET /api/resolve-domain?host=... ---
   if (path === '/api/resolve-domain' && method === 'GET') {
     const queryHost = (url.searchParams.get('host') || '').trim().toLowerCase();
@@ -198,6 +347,28 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     });
   }
 
+  // --- POST /api/admin/login ---
+  if (path === '/api/admin/login' && method === 'POST') {
+    const body = await request.json<{ email?: string; password?: string }>().catch(() => ({}));
+    if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
+      return Response.json({ error: 'Invalid email or password payload' }, { status: 400 });
+    }
+
+    const adminEmail = env.ADMIN_EMAIL || 'admin@profilease.io';
+    const adminPass = env.ADMIN_PASSWORD || 'admin123';
+    const adminToken = 'prof-admin-token-supersecure-2026';
+
+    if (body.email === adminEmail && body.password === adminPass) {
+      return Response.json({
+        success: true,
+        token: adminToken,
+        username: 'System Administrator',
+      });
+    }
+
+    return Response.json({ error: 'Invalid admin credentials' }, { status: 401 });
+  }
+
   // --- POST /api/client/login ---
   if (path === '/api/client/login' && method === 'POST') {
     const body = await request.json<{ email?: string; accessKey?: string }>().catch(() => ({}));
@@ -219,6 +390,25 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       token: `client-token-${profile.id}-${Date.now()}`,
       profile,
     });
+  }
+
+  // --- GET /api/client/me?profileId=... ---
+  if (path === '/api/client/me' && method === 'GET') {
+    const profileId = url.searchParams.get('profileId');
+    if (!profileId) {
+      return Response.json({ error: 'Missing profileId query parameter' }, { status: 400 });
+    }
+
+    const row = await env.DB.prepare('SELECT * FROM profiles WHERE id = ? OR slug = ?')
+      .bind(profileId, profileId)
+      .first<ProfileRow>();
+
+    if (!row) {
+      return Response.json({ error: 'Client profile not found' }, { status: 404 });
+    }
+
+    const profile = await formatProfileWithRelations(row, env.DB);
+    return Response.json({ profile });
   }
 
   // --- GET /api/client/appointments?profileId=... ---
@@ -249,6 +439,42 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
         createdAt: r.created_at,
       }))
     );
+  }
+
+  // --- PATCH /api/client/appointments/:id/status ---
+  if (path.startsWith('/api/client/appointments/') && path.endsWith('/status') && method === 'PATCH') {
+    const id = path.replace('/api/client/appointments/', '').replace('/status', '').trim();
+    const body = await request.json<{ status?: string }>().catch(() => ({}));
+    const status = body.status;
+    const validStatuses = ['pending', 'confirmed', 'declined', 'cancelled', 'completed'];
+
+    if (!status || !validStatuses.includes(status)) {
+      return Response.json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }, { status: 400 });
+    }
+
+    const current = await env.DB.prepare('SELECT * FROM appointments WHERE id = ?').bind(id).first<AppointmentRow>();
+    if (!current) {
+      return Response.json({ error: `Appointment '${id}' not found.` }, { status: 404 });
+    }
+
+    await env.DB.prepare('UPDATE appointments SET status = ? WHERE id = ?').bind(status, id).run();
+    const updated = await env.DB.prepare('SELECT * FROM appointments WHERE id = ?').bind(id).first<AppointmentRow>();
+
+    return Response.json({
+      id: updated!.id,
+      profileId: updated!.profile_id,
+      serviceId: updated!.service_id,
+      serviceTitle: updated!.service_title,
+      clientName: updated!.client_name,
+      clientEmail: updated!.client_email,
+      clientPhone: updated!.client_phone,
+      appointmentDate: updated!.appointment_date,
+      appointmentTime: updated!.appointment_time,
+      notes: updated!.notes || '',
+      status: updated!.status,
+      actionToken: updated!.action_token,
+      createdAt: updated!.created_at,
+    });
   }
 
   // --- POST /api/appointments (Create booking + Async Resend email dispatch) ---
