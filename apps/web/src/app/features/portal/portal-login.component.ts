@@ -23,8 +23,8 @@ export class PortalLoginComponent {
   readonly errorMessage = signal<string | null>(null);
 
   readonly credentials = signal({
-    email: 'contact@drelenavance.com',
-    accessKey: 'vance2026',
+    email: '',
+    accessKey: '',
   });
 
   readonly loginForm = form(this.credentials, (schema) => {
@@ -32,20 +32,6 @@ export class PortalLoginComponent {
     email(schema.email, { message: 'Valid email required' });
     required(schema.accessKey, { message: 'Access key is required' });
   });
-
-  fillElenaDemo(): void {
-    this.credentials.set({
-      email: 'contact@drelenavance.com',
-      accessKey: 'vance2026',
-    });
-  }
-
-  fillMarcusDemo(): void {
-    this.credentials.set({
-      email: 'marcus@chenphysics.edu',
-      accessKey: 'chen2026',
-    });
-  }
 
   onSubmit(event: Event): void {
     event.preventDefault();
