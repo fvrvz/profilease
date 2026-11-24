@@ -85,7 +85,9 @@ export class BookingWidgetComponent {
       d.setDate(today.getDate() + i);
 
       const dayOfWeekName = dayMap[d.getDay()];
-      const dayConfig = prof.availability.find((a) => a.day === dayOfWeekName);
+      const dayConfig = (prof.availability || []).find(
+        (a) => (a.day || (a as { dayOfWeek?: string }).dayOfWeek || '').toLowerCase() === dayOfWeekName.toLowerCase()
+      );
       const isEnabled = dayConfig ? dayConfig.enabled : false;
 
       const yyyy = d.getFullYear();
@@ -131,7 +133,9 @@ export class BookingWidgetComponent {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const currentDay = dayNames[d.getDay()];
 
-    const config = this.profile().availability.find((a) => a.day === currentDay);
+    const config = (this.profile().availability || []).find(
+      (a) => (a.day || (a as { dayOfWeek?: string }).dayOfWeek || '').toLowerCase() === currentDay.toLowerCase()
+    );
     if (!config || !config.enabled) return [];
 
     const slots: string[] = [];
