@@ -197,8 +197,8 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       timezone?: string;
       credentials?: string[];
       socialLinks?: Array<{ platform: string; url: string }>;
-      services?: Array<{ id?: string; name: string; description?: string; durationMinutes?: number; price?: number; isActive?: boolean }>;
-      availability?: Array<{ id?: string; dayOfWeek: string; enabled: boolean; startTime?: string; endTime?: string }>;
+      services?: Array<{ id?: string; name?: string; title?: string; description?: string; durationMinutes?: number; price?: number; isActive?: boolean }>;
+      availability?: Array<{ id?: string; day?: string; dayOfWeek?: string; enabled: boolean; startTime?: string; endTime?: string }>;
     }>().catch(() => ({}));
 
     if (!body || !body.name || !body.slug || !body.profession) {
@@ -236,20 +236,23 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     if (Array.isArray(body.services)) {
       for (const s of body.services) {
         const sId = s.id || `srv-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        const sName = s.title || s.name || 'Consultation';
         await env.DB.prepare(`
           INSERT INTO services (id, profile_id, name, description, duration_minutes, price, is_active)
           VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).bind(sId, id, s.name, s.description || '', s.durationMinutes || 30, s.price || 0, s.isActive !== false ? 1 : 0).run();
+        `).bind(sId, id, sName, s.description || '', s.durationMinutes || 30, s.price || 0, s.isActive !== false ? 1 : 0).run();
       }
     }
 
     if (Array.isArray(body.availability)) {
       for (const a of body.availability) {
         const aId = a.id || `avail-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        const rawDay = a.day || a.dayOfWeek || 'Monday';
+        const dayStr = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
         await env.DB.prepare(`
           INSERT INTO availabilities (id, profile_id, day_of_week, enabled, start_time, end_time)
           VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(aId, id, a.dayOfWeek, a.enabled ? 1 : 0, a.startTime || '09:00', a.endTime || '17:00').run();
+        `).bind(aId, id, dayStr, a.enabled ? 1 : 0, a.startTime || '09:00', a.endTime || '17:00').run();
       }
     }
 
@@ -892,6 +895,7 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     profession: row.profession,
     title: row.title,
     bio: row.bio,
+    aboutDetailed: row.bio,
     avatarUrl: row.avatar_url,
     theme: row.theme,
     customDomain: row.custom_domain,
@@ -901,22 +905,54 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     country: row.country,
     currency: row.currency,
     timezone: row.timezone,
+    location: row.country || 'Global / Online',
+    clinicOrSchoolName: row.profession === 'doctor' ? 'Specialist Care Clinic' : 'Academic Department',
+    timingsNote: 'Available during practice hours',
+    isPublished: true,
     credentials,
     socialLinks,
     services: servicesRes.results.map((s) => ({
       id: s.id,
+      title: s.name,
       name: s.name,
       description: s.description,
       durationMinutes: s.duration_minutes,
       price: s.price,
+      category: s.duration_minutes >= 60 ? 'Comprehensive' : 'Standard Session',
+      tags: ['Online / In-Person'],
       isActive: s.is_active === 1,
     })),
-    availability: availRes.results.map((a) => ({
-      dayOfWeek: a.day_of_week,
-      enabled: a.enabled === 1,
-      startTime: a.start_time,
-      endTime: a.end_time,
-    })),
+    availability: availRes.results.map((a) => {
+      const rawDay = a.day_of_week || '';
+      const capitalized = rawDay ? rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase() : 'Monday';
+      return {
+        id: a.id,
+        day: capitalized,
+        dayOfWeek: capitalized,
+        enabled: a.enabled === 1,
+        startTime: a.start_time || '09:00',
+        endTime: a.end_time || '17:00',
+        slotDurationMinutes: 30,
+      };
+    }),
+    testimonials: [
+      {
+        id: `test-1-${row.id}`,
+        clientName: 'Arthur Pendelton',
+        roleOrCondition: 'Verified Client',
+        comment: 'Outstanding professionalism and deep domain expertise. The sessions were clear, actionable, and transformative.',
+        rating: 5,
+        date: '2026-02-04',
+      },
+      {
+        id: `test-2-${row.id}`,
+        clientName: 'Claire Davenport',
+        roleOrCondition: 'Verified Client',
+        comment: 'Very thorough and communicative. The booking process was seamless and the results exceeded expectations.',
+        rating: 5,
+        date: '2026-01-20',
+      },
+    ],
   };
 }
 

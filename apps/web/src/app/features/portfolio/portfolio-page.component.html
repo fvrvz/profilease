@@ -206,10 +206,10 @@
               <div class="pt-6 mt-6 border-t border-neutral-800">
                 <span class="text-[10px] font-mono uppercase tracking-wider text-neutral-400 block mb-2">Practice Days</span>
                 <div class="flex flex-wrap gap-1.5">
-                  @for (av of profile()?.availability; track av.day) {
+                  @for (av of profile()?.availability; track av.day || $index) {
                     @if (av.enabled) {
                       <span class="px-2 py-0.5 bg-neutral-800 border border-neutral-700 text-[10px] font-mono uppercase">
-                        {{ av.day.slice(0, 3) }}
+                        {{ (av.day || '').slice(0, 3) }}
                       </span>
                     }
                   }
@@ -359,7 +359,7 @@
                   Working Hours
                 </h2>
                 <div class="border border-neutral-200 divide-y divide-neutral-200 text-xs font-mono">
-                  @for (av of profile()?.availability; track av.day) {
+                  @for (av of profile()?.availability; track av.day || $index) {
                     <div class="px-4 py-2.5 flex items-center justify-between">
                       <span class="font-bold uppercase text-neutral-800">{{ av.day }}</span>
                       @if (av.enabled) {

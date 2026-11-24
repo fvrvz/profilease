@@ -102,7 +102,7 @@
                 [class.border-neutral-200]="selectedDate() !== opt.dateString && opt.enabled"
                 [class.hover:border-neutral-900]="selectedDate() !== opt.dateString && opt.enabled"
               >
-                <div class="text-[10px] font-mono uppercase opacity-75">{{ opt.dayName.slice(0, 3) }}</div>
+                <div class="text-[10px] font-mono uppercase opacity-75">{{ (opt.dayName || '').slice(0, 3) }}</div>
                 <div class="text-xs font-bold font-mono mt-0.5">{{ opt.displayMonthDay }}</div>
               </button>
             }
