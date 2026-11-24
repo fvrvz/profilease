@@ -34,13 +34,6 @@ export class AdminLoginComponent {
     required(schema.password, { message: 'Password is required' });
   });
 
-  fillDemoCredentials(): void {
-    this.loginModel.set({
-      email: 'admin@profilease.io',
-      password: 'admin123',
-    });
-  }
-
   onSubmit(e: Event): void {
     e.preventDefault();
     if (this.loginForm().invalid()) return;
