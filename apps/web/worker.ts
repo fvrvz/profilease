@@ -133,8 +133,17 @@ export default {
       // Asset not found, continue to SPA fallback
     }
 
-    // SPA Fallback: Serve index.html for Angular client-side routing
-    return env.ASSETS.fetch(new Request(new URL('/index.html', url.origin).toString(), request));
+    // SPA Fallback: Serve index.html or index.csr.html for Angular client-side routing
+    try {
+      const spaIndex = await env.ASSETS.fetch(new Request(new URL('/index.html', url.origin).toString(), request));
+      if (spaIndex.status !== 404) {
+        return spaIndex;
+      }
+    } catch {
+      // Fall through to index.csr.html
+    }
+
+    return env.ASSETS.fetch(new Request(new URL('/index.csr.html', url.origin).toString(), request));
   },
 };
 
