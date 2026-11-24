@@ -31,7 +31,9 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build Web Application
-        run: npx nx build web --configuration=production
+        run: |
+          npx nx build web --configuration=production
+          cp dist/apps/web/browser/index.csr.html dist/apps/web/browser/index.html
 
       - name: Deploy Worker to Cloudflare Global Edge
         uses: cloudflare/wrangler-action@v4
