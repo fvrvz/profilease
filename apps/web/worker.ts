@@ -4,10 +4,15 @@ import { Resend } from 'resend';
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
-  STORAGE?: R2Bucket;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
   NODE_ENV?: string;
+  // Tigris S3-compatible storage credentials (set as Worker secrets)
+  TIGRIS_ACCESS_KEY_ID?: string;
+  TIGRIS_SECRET_ACCESS_KEY?: string;
+  TIGRIS_ENDPOINT?: string;
+  TIGRIS_BUCKET?: string;
+  TIGRIS_REGION?: string;
 }
 
 const mediaCacheWorker = new Map<string, { buffer: Uint8Array; mimeType: string }>();
@@ -432,7 +437,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     return Response.json(formatted);
   }
 
-  // --- POST /api/upload (Cloudflare R2 storage / fallback base64 image ingest) ---
+  // --- POST /api/upload (Tigris S3-compatible storage) ---
   if (path === '/api/upload' && method === 'POST') {
     const body = await request.json<{
       imageBase64?: string;
@@ -459,15 +464,33 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const extension = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
     const fileKey = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${extension}`;
 
-    // 1. Write to R2 Bucket if bound
-    if (env.STORAGE) {
-      await env.STORAGE.put(fileKey, buffer, {
-        httpMetadata: { contentType: mimeType },
+    // Upload to Tigris via S3-compatible signed PUT
+    if (env.TIGRIS_ACCESS_KEY_ID && env.TIGRIS_SECRET_ACCESS_KEY && env.TIGRIS_BUCKET) {
+      const endpoint = env.TIGRIS_ENDPOINT || 'https://t3.storage.dev';
+      const region = env.TIGRIS_REGION || 'auto';
+      const uploadUrl = `${endpoint}/${env.TIGRIS_BUCKET}/${fileKey}`;
+      const signedHeaders = await signS3Request({
+        method: 'PUT',
+        url: uploadUrl,
+        region,
+        accessKeyId: env.TIGRIS_ACCESS_KEY_ID,
+        secretAccessKey: env.TIGRIS_SECRET_ACCESS_KEY,
+        contentType: mimeType,
+        body: buffer,
       });
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { ...signedHeaders, 'Content-Type': mimeType },
+        body: buffer,
+      });
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
+        return Response.json({ error: `Tigris upload failed: ${errText}` }, { status: 502 });
+      }
+    } else {
+      // Fallback: keep in worker memory cache for local dev
+      mediaCacheWorker.set(fileKey, { buffer, mimeType });
     }
-
-    // 2. Also keep in memory cache for immediate local/preview availability
-    mediaCacheWorker.set(fileKey, { buffer, mimeType });
 
     const mediaUrl = `${url.origin}/api/media/${fileKey}`;
     return Response.json(
@@ -482,23 +505,34 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     );
   }
 
-  // --- GET /api/media/:key (Serve media assets from R2 / cache) ---
+  // --- GET /api/media/:key (Serve media assets from Tigris / cache) ---
   if (path.startsWith('/api/media/') && method === 'GET') {
     const key = path.replace('/api/media/', '').trim();
 
-    // 1. Try R2 bucket first
-    if (env.STORAGE) {
-      const object = await env.STORAGE.get(key);
-      if (object) {
+    // 1. Try Tigris bucket via signed GET
+    if (env.TIGRIS_ACCESS_KEY_ID && env.TIGRIS_SECRET_ACCESS_KEY && env.TIGRIS_BUCKET) {
+      const endpoint = env.TIGRIS_ENDPOINT || 'https://t3.storage.dev';
+      const region = env.TIGRIS_REGION || 'auto';
+      const objectUrl = `${endpoint}/${env.TIGRIS_BUCKET}/${key}`;
+      const signedHeaders = await signS3Request({
+        method: 'GET',
+        url: objectUrl,
+        region,
+        accessKeyId: env.TIGRIS_ACCESS_KEY_ID,
+        secretAccessKey: env.TIGRIS_SECRET_ACCESS_KEY,
+      });
+      const res = await fetch(objectUrl, { method: 'GET', headers: signedHeaders });
+      if (res.ok) {
         const headers = new Headers();
-        headers.set('Content-Type', object.httpMetadata?.contentType || 'image/webp');
+        headers.set('Content-Type', res.headers.get('Content-Type') || 'image/webp');
         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-        headers.set('ETag', object.httpEtag);
-        return new Response(object.body, { headers });
+        const etag = res.headers.get('ETag');
+        if (etag) headers.set('ETag', etag);
+        return new Response(res.body, { headers });
       }
     }
 
-    // 2. Fallback to worker memory cache
+    // 2. Fallback to worker memory cache (local dev)
     const cached = mediaCacheWorker.get(key);
     if (cached) {
       return new Response(cached.buffer as unknown as BodyInit, {
@@ -513,6 +547,87 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
   }
 
   return Response.json({ error: 'Endpoint not found' }, { status: 404 });
+}
+
+// ---------------------------------------------------------------------------
+// AWS Signature V4 helper for Tigris (S3-compatible) — no external SDK needed
+// ---------------------------------------------------------------------------
+async function signS3Request(opts: {
+  method: string;
+  url: string;
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  contentType?: string;
+  body?: Uint8Array;
+}): Promise<Record<string, string>> {
+  const { method, url: rawUrl, region, accessKeyId, secretAccessKey, contentType, body } = opts;
+  const parsed = new URL(rawUrl);
+  const host = parsed.host;
+  const pathname = parsed.pathname;
+  const now = new Date();
+  const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+  const dateStamp = amzDate.slice(0, 8);
+
+  // Payload hash
+  const payloadBytes = body ?? new Uint8Array(0);
+  const payloadHashBuf = await crypto.subtle.digest('SHA-256', payloadBytes);
+  const payloadHash = Array.from(new Uint8Array(payloadHashBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  // Canonical headers
+  const headers: Record<string, string> = {
+    host,
+    'x-amz-content-sha256': payloadHash,
+    'x-amz-date': amzDate,
+  };
+  if (contentType) headers['content-type'] = contentType;
+
+  const sortedHeaderKeys = Object.keys(headers).sort();
+  const canonicalHeaders = sortedHeaderKeys.map((k) => `${k}:${headers[k]}\n`).join('');
+  const signedHeaders = sortedHeaderKeys.join(';');
+
+  const canonicalRequest = [
+    method.toUpperCase(),
+    pathname,
+    '', // no query string
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join('\n');
+
+  // String to sign
+  const scope = `${dateStamp}/${region}/s3/aws4_request`;
+  const canonicalHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonicalRequest));
+  const canonicalHash = Array.from(new Uint8Array(canonicalHashBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${scope}\n${canonicalHash}`;
+
+  // Signing key
+  const enc = new TextEncoder();
+  const hmac = async (key: ArrayBuffer, data: string) =>
+    crypto.subtle.sign('HMAC', await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']), enc.encode(data));
+
+  const kDate = await hmac(enc.encode(`AWS4${secretAccessKey}`).buffer as ArrayBuffer, dateStamp);
+  const kRegion = await hmac(kDate, region);
+  const kService = await hmac(kRegion, 's3');
+  const kSigning = await hmac(kService, 'aws4_request');
+  const sigBuf = await hmac(kSigning, stringToSign);
+  const signature = Array.from(new Uint8Array(sigBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  const authorization = `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+  const result: Record<string, string> = {
+    Authorization: authorization,
+    'x-amz-date': amzDate,
+    'x-amz-content-sha256': payloadHash,
+  };
+  if (contentType) result['Content-Type'] = contentType;
+  return result;
 }
 
 async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
