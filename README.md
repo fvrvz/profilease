@@ -52,7 +52,31 @@ Navigate to:
 - Public Showcase & Directory: `http://localhost:4000/`
 - Dr. Vance's Medical Profile: `http://localhost:4000/@dr-elena-vance`
 - Prof. Chen's Academic Profile: `http://localhost:4000/@prof-marcus-chen`
-- Admin Portal: `http://localhost:4000/admin` *(Login: `admin@profilease.io` / `admin123`)*
+- Admin Portal: `http://localhost:4000/admin`
+- Practitioner Portal: `http://localhost:4000/portal`
+
+---
+
+## 🔐 Access Portals & Credentials
+
+> [!NOTE]
+> All UI pre-filled credential helpers have been removed from the production interface for security. Use the credentials below to log into the respective dashboards:
+
+### 1. System Administration (`/admin`)
+- **Dashboard URL**: `http://localhost:4000/admin` *(or [Cloudflare Edge Live](https://profilease-web.codefaraaz.workers.dev/admin))*
+- **Admin Email**: `admin@profilease.io`
+- **Password**: `admin123`
+- **Capabilities**: Onboard new practitioners, configure custom domains, review and update all client appointments.
+
+### 2. Practitioner Self-Service Portal (`/portal`)
+- **Portal URL**: `http://localhost:4000/portal` *(or [Cloudflare Edge Live](https://profilease-web.codefaraaz.workers.dev/portal))*
+
+| Practitioner | Registered Email | Access Key |
+| :--- | :--- | :--- |
+| **Dr. Elena Vance, MD** | `contact@drelenavance.com` | `elena2026` *(or `vance2026`)* |
+| **Prof. Marcus Chen, M.Sc.** | `marcus@chenphysics.edu` | `marcus2026` *(or `chen2026`)* |
+
+- **Capabilities**: Manage services and consultation pricing, set multi-currency preferences, configure weekly working hour availability, accept or decline bookings.
 
 ---
 

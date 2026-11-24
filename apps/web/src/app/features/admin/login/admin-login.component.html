@@ -17,22 +17,6 @@
       </p>
     </div>
 
-    <!-- Quick Demo Hint -->
-    <div class="bg-neutral-50 border border-neutral-300 p-3 mb-6 font-mono text-[11px] text-neutral-700">
-      <div class="flex items-center justify-between font-bold uppercase text-[10px] text-neutral-500 mb-1">
-        <span>Pre-filled Demo Credentials</span>
-        <button
-          type="button"
-          (click)="fillDemoCredentials()"
-          class="text-neutral-900 underline hover:text-neutral-600 cursor-pointer"
-        >
-          Click to Apply
-        </button>
-      </div>
-      <div>User: <code class="bg-neutral-200 px-1 py-0.5">admin&#64;profilease.io</code></div>
-      <div>Pass: <code class="bg-neutral-200 px-1 py-0.5">admin123</code></div>
-    </div>
-
     <!-- Signal Form -->
     <form (submit)="onSubmit($event)" novalidate class="space-y-4">
       <!-- Email Input -->
@@ -43,7 +27,7 @@
         <input
           type="email"
           [formField]="loginForm.email"
-          placeholder="admin@profilease.io"
+          placeholder="admin@example.com"
           class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
         />
         @if (loginForm.email().invalid() && loginForm.email().touched()) {
