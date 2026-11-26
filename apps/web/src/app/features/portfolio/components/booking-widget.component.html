@@ -12,7 +12,7 @@
         </div>
 
         <!-- Step Indicator -->
-        <div class="flex items-center gap-1.5 text-xs font-mono uppercase">
+        <div class="flex flex-wrap items-center gap-1.5 text-xs font-mono uppercase">
           <span
             class="px-2.5 py-1 border border-neutral-900"
             [class.bg-neutral-900]="step() === 1"
@@ -315,7 +315,7 @@
               <span class="text-neutral-500 uppercase text-[10px]">Reference Code</span>
               <span class="font-bold text-neutral-900">{{ confirmedBooking()?.id }}</span>
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
                 <span class="text-neutral-500 uppercase text-[10px] block">Provider</span>
                 <span class="font-bold text-neutral-900">{{ profile().name }}</span>
