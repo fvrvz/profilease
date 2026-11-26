@@ -28,17 +28,21 @@ export class LandingPageComponent {
   readonly checkoutLoadingPlan = signal<string | null>(null);
   readonly checkoutError = signal<string | null>(null);
 
+  // Basic plan: flat $20/yr base; we manage domain + hosting on their behalf.
+  // Discounts apply when practitioner brings their own domain / hosting.
+  // Usage-based add-ons are billed separately on top.
   readonly headlessPriceUsd = computed<number>(() => {
     const base = this.billingCycle() === 'yearly' ? 20 : 12;
-    const domainDiscount = this.hasOwnDomain() ? (this.billingCycle() === 'yearly' ? 6 : 3) : 0;
-    const hostingDiscount = this.hasOwnHosting() ? (this.billingCycle() === 'yearly' ? 4 : 2) : 0;
-    return Math.max(5, base - domainDiscount - hostingDiscount);
+    const domainDiscount = this.hasOwnDomain() ? (this.billingCycle() === 'yearly' ? 5 : 3) : 0;
+    const hostingDiscount = this.hasOwnHosting() ? (this.billingCycle() === 'yearly' ? 5 : 2) : 0;
+    return Math.max(10, base - domainDiscount - hostingDiscount);
   });
 
+  // Pro plan: $299/yr full white-label; discounts for own domain / hosting.
   readonly proPriceUsd = computed<number>(() => {
-    const base = this.billingCycle() === 'yearly' ? 499 : 269;
+    const base = this.billingCycle() === 'yearly' ? 299 : 169;
     const domainDiscount = this.hasOwnDomain() ? (this.billingCycle() === 'yearly' ? 15 : 8) : 0;
-    const hostingDiscount = this.hasOwnHosting() ? (this.billingCycle() === 'yearly' ? 80 : 40) : 0;
+    const hostingDiscount = this.hasOwnHosting() ? (this.billingCycle() === 'yearly' ? 50 : 25) : 0;
     return Math.max(99, base - domainDiscount - hostingDiscount);
   });
 
