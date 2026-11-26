@@ -12,6 +12,7 @@
       <nav class="hidden md:flex items-center gap-6 text-xs font-mono font-bold uppercase tracking-wider text-neutral-300">
         <a href="#features" class="hover:text-white transition-colors">Features</a>
         <a href="#workflow" class="hover:text-white transition-colors">How It Works</a>
+        <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
         <a href="#testimonials" class="hover:text-white transition-colors">Testimonials</a>
       </nav>
 
@@ -194,6 +195,168 @@
             Patients and students book slots directly while you confirm appointments in one click.
           </p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING SECTION -->
+  <section id="pricing" class="max-w-6xl w-full mx-auto px-4 sm:px-6 pb-16">
+    <div class="border-b-2 border-neutral-900 pb-4 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Transparent Pricing</span>
+        <h2 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-neutral-900">
+          Simple Plans in Your Local Currency
+        </h2>
+      </div>
+
+      <!-- Billing Cycle Toggle -->
+      <div class="inline-flex border-2 border-neutral-900 bg-white font-mono text-xs font-bold uppercase">
+        <button
+          type="button"
+          (click)="billingCycle.set('yearly')"
+          class="px-4 py-2 cursor-pointer transition-colors"
+          [class.bg-neutral-900]="billingCycle() === 'yearly'"
+          [class.text-white]="billingCycle() === 'yearly'"
+        >
+          Yearly
+        </button>
+        <button
+          type="button"
+          (click)="billingCycle.set('half_yearly')"
+          class="px-4 py-2 cursor-pointer transition-colors border-l-2 border-neutral-900"
+          [class.bg-neutral-900]="billingCycle() === 'half_yearly'"
+          [class.text-white]="billingCycle() === 'half_yearly'"
+        >
+          Half-Yearly
+        </button>
+      </div>
+    </div>
+
+    <!-- Domain & Hosting Adjustments -->
+    <div class="bg-white border-2 border-neutral-900 p-4 sm:p-5 mb-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-wrap items-center justify-between gap-4">
+      <div class="text-xs font-mono uppercase font-bold text-neutral-700">
+        Adjust for what you already own:
+      </div>
+      <div class="flex flex-wrap items-center gap-5 text-xs font-mono">
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            [checked]="hasOwnDomain()"
+            (change)="hasOwnDomain.set($any($event.target).checked)"
+            class="w-4 h-4 accent-neutral-900"
+          />
+          <span class="font-bold text-neutral-900">I already have a domain</span>
+          <span class="text-emerald-700 font-bold">(Domain discount applied)</span>
+        </label>
+
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            [checked]="hasOwnHosting()"
+            (change)="hasOwnHosting.set($any($event.target).checked)"
+            class="w-4 h-4 accent-neutral-900"
+          />
+          <span class="font-bold text-neutral-900">I&apos;ll use my own hosting</span>
+          <span class="text-emerald-700 font-bold">(Hosting discount applied)</span>
+        </label>
+      </div>
+    </div>
+
+    @if (checkoutError()) {
+      <div class="mb-6 p-3 bg-red-50 border-2 border-red-600 text-red-700 text-xs font-mono">
+        {{ checkoutError() }}
+      </div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Headless Setup Plan -->
+      <div class="bg-white border-2 border-neutral-900 p-6 sm:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <span class="text-xs font-mono uppercase font-bold tracking-widest text-neutral-500">Headless Setup</span>
+            <app-sharp-badge variant="teal">Starter</app-sharp-badge>
+          </div>
+          <div class="flex items-baseline gap-2 mb-3">
+            <span class="text-3xl sm:text-4xl font-black text-neutral-900 font-mono">
+              {{ currencyService.formatPrice(headlessPriceUsd(), 'USD') }}
+            </span>
+            <span class="text-xs font-mono text-neutral-500 uppercase">
+              / {{ billingCycle() === 'yearly' ? 'year' : '6 months' }}
+            </span>
+          </div>
+          <p class="text-xs text-neutral-600 mb-6 leading-relaxed">
+            Ideal for independent doctors and educators starting on a headless portfolio + booking API with optional custom domain later.
+          </p>
+          <ul class="space-y-2.5 text-xs font-mono text-neutral-800 mb-8">
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Headless portfolio &amp; booking engine</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Practitioner Portal + temp password onboarding</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Email &amp; WhatsApp booking notifications</span>
+            </li>
+          </ul>
+        </div>
+
+        <button
+          type="button"
+          (click)="subscribeWithPayPal('headless')"
+          [disabled]="checkoutLoadingPlan() === 'headless'"
+          class="w-full py-3.5 bg-neutral-900 text-white text-xs font-mono font-bold uppercase tracking-wider border-2 border-neutral-900 hover:bg-neutral-800 cursor-pointer disabled:opacity-50"
+        >
+          {{ checkoutLoadingPlan() === 'headless' ? 'Connecting to PayPal...' : 'Subscribe with PayPal →' }}
+        </button>
+      </div>
+
+      <!-- Pro White-Label Plan -->
+      <div class="bg-neutral-900 text-white border-2 border-neutral-900 p-6 sm:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <span class="text-xs font-mono uppercase font-bold tracking-widest text-neutral-400">Pro Custom Branding</span>
+            <span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-700 text-[10px] font-mono font-bold uppercase">
+              Full White-Label
+            </span>
+          </div>
+          <div class="flex items-baseline gap-2 mb-3">
+            <span class="text-3xl sm:text-4xl font-black text-white font-mono">
+              {{ currencyService.formatPrice(proPriceUsd(), 'USD') }}
+            </span>
+            <span class="text-xs font-mono text-neutral-400 uppercase">
+              / {{ billingCycle() === 'yearly' ? 'year' : '6 months' }}
+            </span>
+          </div>
+          <p class="text-xs text-neutral-300 mb-6 leading-relaxed">
+            Complete white-label branding, strict custom-domain isolation, dedicated Cloudflare setup, and priority onboarding support.
+          </p>
+          <ul class="space-y-2.5 text-xs font-mono text-neutral-200 mb-8">
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Strict custom-domain isolation &amp; SSL</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Custom branding &amp; white-label footer</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Priority WhatsApp &amp; dedicated setup support</span>
+            </li>
+          </ul>
+        </div>
+
+        <button
+          type="button"
+          (click)="subscribeWithPayPal('pro')"
+          [disabled]="checkoutLoadingPlan() === 'pro'"
+          class="w-full py-3.5 bg-white text-neutral-900 text-xs font-mono font-bold uppercase tracking-wider border-2 border-white hover:bg-neutral-200 cursor-pointer disabled:opacity-50"
+        >
+          {{ checkoutLoadingPlan() === 'pro' ? 'Connecting to PayPal...' : 'Subscribe with PayPal →' }}
+        </button>
       </div>
     </div>
   </section>

@@ -100,6 +100,22 @@
             </div>
           </div>
 
+          <!-- Custom Domain (Optional, can be set after onboarding) -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+              Custom Domain (Optional)
+            </label>
+            <input
+              type="text"
+              [formField]="profileForm.customDomain"
+              placeholder="e.g. drelenavance.com"
+              class="w-full px-3 py-2 border-2 border-neutral-900 bg-white text-sm font-mono focus:outline-none"
+            />
+            <p class="text-[11px] font-mono text-neutral-500 mt-1">
+              Point a CNAME record to profilease.byfaraaz.com to serve your portfolio on your own domain.
+            </p>
+          </div>
+
           <!-- Social Media & External Profiles -->
           <div class="border-t border-neutral-200 pt-4">
             <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-2 flex items-center gap-2 font-sans">

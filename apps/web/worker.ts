@@ -6,6 +6,10 @@ export interface Env {
   ASSETS: Fetcher;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
+  WHATSAPP_WEBHOOK_URL?: string;
+  PAYPAL_CLIENT_ID?: string;
+  PAYPAL_CLIENT_SECRET?: string;
+  PAYPAL_ENV?: string;
   NODE_ENV?: string;
   ADMIN_EMAIL?: string;
   ADMIN_PASSWORD?: string;
@@ -30,6 +34,7 @@ interface ProfileRow {
   theme: string;
   custom_domain: string | null;
   client_access_key: string;
+  must_change_password?: number;
   email: string;
   phone: string;
   country: string;
@@ -242,7 +247,8 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const avatarUrl = body.avatarUrl || '';
     const theme = body.theme || 'medical-teal';
     const customDomain = body.customDomain || null;
-    const clientAccessKey = body.clientAccessKey || Math.random().toString(36).substring(2, 10);
+    const clientAccessKey = body.clientAccessKey || `Tmp-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6)}`;
+    const mustChangePassword = 1;
     const email = body.email || '';
     const phone = body.phone || '';
     const country = body.country || 'United States';
@@ -252,9 +258,9 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const socialLinks = JSON.stringify(body.socialLinks || []);
 
     await env.DB.prepare(`
-      INSERT INTO profiles (id, slug, name, profession, title, bio, avatar_url, theme, custom_domain, client_access_key, email, phone, country, currency, timezone, credentials, social_links)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, slug, name, profession, title, bio, avatarUrl, theme, customDomain, clientAccessKey, email, phone, country, currency, timezone, credentials, socialLinks).run();
+      INSERT INTO profiles (id, slug, name, profession, title, bio, avatar_url, theme, custom_domain, client_access_key, must_change_password, email, phone, country, currency, timezone, credentials, social_links)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, slug, name, profession, title, bio, avatarUrl, theme, customDomain, clientAccessKey, mustChangePassword, email, phone, country, currency, timezone, credentials, socialLinks).run();
 
     if (Array.isArray(body.services)) {
       for (const s of body.services) {
@@ -284,6 +290,18 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       return Response.json({ error: 'Failed to create profile' }, { status: 500 });
     }
     const createdProfile = await formatProfileWithRelations(createdRow, env.DB);
+    ctx.waitUntil(
+      dispatchOnboardingNotifications({
+        env,
+        origin: url.origin,
+        name,
+        email,
+        phone,
+        slug,
+        customDomain,
+        tempPassword: clientAccessKey,
+      })
+    );
     return Response.json(createdProfile, { status: 201 });
   }
 
@@ -428,6 +446,45 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       token: `client-token-${profile.id}-${Date.now()}`,
       profile,
     });
+  }
+
+  // --- POST /api/client/change-password ---
+  if (path === '/api/client/change-password' && method === 'POST') {
+    const body = await request.json<{
+      profileId?: string;
+      currentPassword?: string;
+      newPassword?: string;
+    }>().catch(() => ({}));
+
+    if (!body.profileId || !body.currentPassword || !body.newPassword) {
+      return Response.json({ error: 'Missing required password fields.' }, { status: 400 });
+    }
+    if (body.newPassword.trim().length < 8) {
+      return Response.json({ error: 'New password must be at least 8 characters.' }, { status: 400 });
+    }
+
+    const row = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?')
+      .bind(body.profileId)
+      .first<ProfileRow>();
+
+    if (!row || row.client_access_key !== body.currentPassword.trim()) {
+      return Response.json({ error: 'Current temporary password is incorrect.' }, { status: 401 });
+    }
+
+    await env.DB.prepare('UPDATE profiles SET client_access_key = ?, must_change_password = 0 WHERE id = ?')
+      .bind(body.newPassword.trim(), body.profileId)
+      .run();
+
+    const updated = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?')
+      .bind(body.profileId)
+      .first<ProfileRow>();
+
+    if (!updated) {
+      return Response.json({ error: 'Profile not found after update.' }, { status: 404 });
+    }
+
+    const profile = await formatProfileWithRelations(updated, env.DB);
+    return Response.json({ success: true, profile });
   }
 
   // --- GET /api/client/me?profileId=... ---
@@ -671,6 +728,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       bio?: string;
       avatarUrl?: string;
       phone?: string;
+      customDomain?: string | null;
       location?: string;
       clinicOrSchoolName?: string;
       credentials?: string[];
@@ -692,14 +750,16 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const updatedBio = body.bio ?? current.bio;
     const updatedAvatar = body.avatarUrl ?? current.avatar_url;
     const updatedPhone = body.phone ?? current.phone;
+    const updatedCustomDomain =
+      body.customDomain !== undefined ? (body.customDomain?.trim() || null) : current.custom_domain;
     const updatedCredentials = body.credentials ? JSON.stringify(body.credentials) : current.credentials;
     const updatedSocialLinks = body.socialLinks ? JSON.stringify(body.socialLinks) : (current.social_links || null);
 
     await env.DB.prepare(`
       UPDATE profiles
-      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, credentials = ?, social_links = ?
+      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, custom_domain = ?, credentials = ?, social_links = ?
       WHERE id = ?
-    `).bind(updatedName, updatedTitle, updatedBio, updatedAvatar, updatedPhone, updatedCredentials, updatedSocialLinks, body.id).run();
+    `).bind(updatedName, updatedTitle, updatedBio, updatedAvatar, updatedPhone, updatedCustomDomain, updatedCredentials, updatedSocialLinks, body.id).run();
 
     const updatedRow = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(body.id).first<ProfileRow>();
     if (!updatedRow) {
@@ -819,7 +879,142 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     return Response.json({ error: `Media asset '${key}' not found.` }, { status: 404 });
   }
 
+  // --- POST /api/billing/paypal/create-order ---
+  if (path === '/api/billing/paypal/create-order' && method === 'POST') {
+    const body = await request.json<{
+      planId?: string;
+      billingCycle?: 'yearly' | 'half_yearly';
+      amountUsd?: number;
+      hasOwnDomain?: boolean;
+      hasOwnHosting?: boolean;
+    }>().catch(() => ({}));
+
+    const amountUsd = Math.max(1, Number(body.amountUsd || 20));
+    const description = `Profilease ${body.planId || 'headless'} (${body.billingCycle || 'yearly'})`;
+
+    if (env.PAYPAL_CLIENT_ID && env.PAYPAL_CLIENT_SECRET) {
+      const apiBase =
+        env.PAYPAL_ENV === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+      const authHeader = btoa(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`);
+      const tokenRes = await fetch(`${apiBase}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'grant_type=client_credentials',
+      });
+
+      if (tokenRes.ok) {
+        const tokenData = (await tokenRes.json()) as { access_token?: string };
+        if (tokenData.access_token) {
+          const orderRes = await fetch(`${apiBase}/v2/checkout/orders`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${tokenData.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              intent: 'CAPTURE',
+              purchase_units: [
+                {
+                  description,
+                  amount: {
+                    currency_code: 'USD',
+                    value: amountUsd.toFixed(2),
+                  },
+                },
+              ],
+              application_context: {
+                return_url: `${url.origin}/portal/login`,
+                cancel_url: `${url.origin}/#pricing`,
+              },
+            }),
+          });
+          if (orderRes.ok) {
+            const orderData = (await orderRes.json()) as {
+              id?: string;
+              links?: Array<{ rel: string; href: string }>;
+            };
+            const approveUrl = orderData.links?.find((l) => l.rel === 'approve')?.href;
+            if (approveUrl) {
+              return Response.json({ orderId: orderData.id, approveUrl });
+            }
+          }
+        }
+      }
+    }
+
+    return Response.json({
+      orderId: `pp-fallback-${Date.now()}`,
+      approveUrl: `https://www.paypal.com/paypalme/fvrvz/${amountUsd.toFixed(2)}`,
+      fallback: true,
+    });
+  }
+
   return Response.json({ error: 'Endpoint not found' }, { status: 404 });
+}
+
+async function dispatchOnboardingNotifications(params: {
+  env: Env;
+  origin: string;
+  name: string;
+  email: string;
+  phone: string;
+  slug: string;
+  customDomain: string | null;
+  tempPassword: string;
+}): Promise<void> {
+  const previewUrl = params.customDomain
+    ? `https://${params.customDomain}`
+    : `${params.origin}/@${params.slug}`;
+  const portalUrl = `${params.origin}/portal/login`;
+
+  const whatsappText = `Onboarding done! Welcome to Profilease, ${params.name}. Live preview: ${previewUrl}. Check your registered email (${params.email}) for your Practitioner Portal credentials.`;
+  if (params.phone) {
+    if (params.env.WHATSAPP_WEBHOOK_URL) {
+      try {
+        await fetch(params.env.WHATSAPP_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: params.phone, message: whatsappText }),
+        });
+      } catch (err) {
+        console.error('WhatsApp onboarding webhook error:', err);
+      }
+    } else {
+      console.log(`[WHATSAPP ONBOARDING] To: ${params.phone} | ${whatsappText}`);
+    }
+  }
+
+  const apiKey = params.env.RESEND_API_KEY;
+  if (!apiKey || !params.email) return;
+
+  const resend = new Resend(apiKey);
+  const fromEmail = params.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
+  try {
+    await resend.emails.send({
+      from: `Profilease <${fromEmail}>`,
+      to: [params.email],
+      subject: `Welcome to Profilease, ${params.name} — Your Portal Credentials`,
+      html: `
+        <div style="font-family: monospace; padding: 24px; border: 2px solid #0a0a0a; max-width: 540px;">
+          <h2 style="text-transform: uppercase; margin-top: 0;">Welcome to Profilease</h2>
+          <p>Hi <strong>${params.name}</strong>, your onboarding is complete and your live portfolio is ready:</p>
+          <p><a href="${previewUrl}">${previewUrl}</a></p>
+          <div style="background: #f4f4f5; border: 1px solid #d4d4d8; padding: 14px; margin: 18px 0;">
+            <div><strong>Portal URL:</strong> <a href="${portalUrl}">${portalUrl}</a></div>
+            <div><strong>Username (Email):</strong> ${params.email}</div>
+            <div><strong>Temporary Password:</strong> ${params.tempPassword}</div>
+          </div>
+          <p style="font-size: 12px; color: #52525b;">For your security, you will be asked to set a new password immediately after logging in.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error('Resend onboarding email error:', err);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -935,6 +1130,7 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     theme: row.theme,
     customDomain: row.custom_domain,
     clientAccessKey: row.client_access_key,
+    mustChangePassword: Boolean(row.must_change_password),
     email: row.email,
     phone: row.phone,
     country: row.country,
