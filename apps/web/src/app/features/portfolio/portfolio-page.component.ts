@@ -5,9 +5,9 @@ import { Title } from '@angular/platform-browser';
 import { UserProfile, ServiceItem } from '@profilease/types';
 import { ProfileService } from '@service/profile.service';
 import { CurrencyService } from '@service/currency.service';
+import { TenantContextService } from '@service/tenant-context.service';
 import { SharpBadgeComponent } from '@shared/components/sharp-badge.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
-import { SharpSelectComponent } from '@shared/components/sharp-select.component';
 import { BookingWidgetComponent } from './components/booking-widget.component';
 
 @Component({
@@ -17,17 +17,18 @@ import { BookingWidgetComponent } from './components/booking-widget.component';
     UpperCasePipe,
     SharpBadgeComponent,
     SharpIconComponent,
-    SharpSelectComponent,
     BookingWidgetComponent,
   ],
   templateUrl: './portfolio-page.component.html',
 })
 export class PortfolioPageComponent implements OnInit {
-  // Input from route param :slug
+  // Input from route param :slug or custom domain host
   readonly slug = input<string>();
+  readonly customDomainHost = input<string>();
 
   protected readonly profileService = inject(ProfileService);
   protected readonly currencyService = inject(CurrencyService);
+  protected readonly tenantContext = inject(TenantContextService);
   private readonly titleService = inject(Title);
 
   readonly selectedServiceId = signal<string>('');
@@ -37,12 +38,18 @@ export class PortfolioPageComponent implements OnInit {
     effect(() => {
       const prof = this.profile();
       if (prof) {
-        this.titleService.setTitle(`${prof.name} — ${prof.title} | Profilease`);
+        const suffix = this.tenantContext.isCustomDomain() ? '' : ' | Profilease';
+        this.titleService.setTitle(`${prof.name} — ${prof.title}${suffix}`);
       }
     });
   }
 
   ngOnInit(): void {
+    const domainHost = this.customDomainHost();
+    if (domainHost) {
+      this.profileService.loadByCustomDomain(domainHost).subscribe();
+      return;
+    }
     const slugVal = this.slug();
     if (slugVal) {
       // Remove leading '@' if present from /@dr-smith

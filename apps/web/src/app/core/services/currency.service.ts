@@ -51,12 +51,14 @@ export class CurrencyService {
   // Real-time rates map (code -> rate vs USD)
   readonly rates = signal<Record<string, number>>(DEFAULT_RATES_TO_USD);
 
-  // Active viewing currency (automatically detected or user overridden)
+  // Active viewing currency (automatically detected from visitor location)
   readonly activeCurrency = signal<string>('USD');
   readonly detectedUserCountry = signal<string>('US');
+  readonly localEmergencyNumber = signal<string>('911');
 
   constructor() {
     this.detectUserCurrency();
+    this.fetchVisitorGeo();
     this.fetchLiveExchangeRates();
   }
 
@@ -80,9 +82,74 @@ export class CurrencyService {
       if (mapped) {
         this.activeCurrency.set(mapped.currency);
         this.detectedUserCountry.set(mapped.country);
+        this.localEmergencyNumber.set(this.mapCountryToEmergencyNumber(mapped.country));
       }
     } catch {
       // Fallback to USD
+    }
+  }
+
+  private fetchVisitorGeo(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.http
+      .get<{ country_code?: string; currency?: string }>('https://ipapi.co/json/')
+      .subscribe({
+        next: (geo) => {
+          const country = geo?.country_code?.toUpperCase();
+          const currency = geo?.currency?.toUpperCase();
+          if (country) {
+            this.detectedUserCountry.set(country);
+            this.localEmergencyNumber.set(this.mapCountryToEmergencyNumber(country));
+            this.fetchLiveEmergencyNumber(country);
+          }
+          if (currency) {
+            this.activeCurrency.set(currency);
+          }
+        },
+        error: () => {
+          // Keep timezone-detected fallback
+        },
+      });
+  }
+
+  private fetchLiveEmergencyNumber(countryCode: string): void {
+    this.http
+      .get<{ data?: { dispatch?: { all?: readonly string[] }; ambulance?: { all?: readonly string[] } } }>(
+        `https://emergencynumberapi.com/api/country/${encodeURIComponent(countryCode)}`
+      )
+      .subscribe({
+        next: (res) => {
+          const num = res?.data?.dispatch?.all?.[0] || res?.data?.ambulance?.all?.[0];
+          if (num && num.trim().length > 0) {
+            this.localEmergencyNumber.set(num.trim());
+          }
+        },
+        error: () => {
+          // Keep country-mapped emergency fallback
+        },
+      });
+  }
+
+  private mapCountryToEmergencyNumber(countryCode: string): string {
+    switch (countryCode) {
+      case 'IN':
+        return '112';
+      case 'GB':
+        return '999';
+      case 'AU':
+        return '000';
+      case 'NZ':
+        return '111';
+      case 'JP':
+        return '119';
+      case 'BR':
+        return '192';
+      case 'US':
+      case 'CA':
+        return '911';
+      default:
+        return '112';
     }
   }
 
@@ -174,7 +241,7 @@ export class CurrencyService {
     return toCurrency === 'JPY' ? Math.round(converted) : Math.round(converted * 100) / 100;
   }
 
-  // Real-time Display Formatter: Shows local converted price alongside provider base price
+  // Real-time Display Formatter: Shows only the visitor's automatically converted local currency
   formatPrice(amount: number, providerCurrency = 'USD', targetCurrency?: string): string {
     const target = targetCurrency || this.activeCurrency();
     const providerSymbol = this.getSymbol(providerCurrency);
@@ -186,7 +253,12 @@ export class CurrencyService {
     const convertedAmount = this.convert(amount, providerCurrency, target);
     const targetSymbol = this.getSymbol(target);
 
-    // E.g.: "₹20,750 (~$250 USD)" or "$250 (~₹20,750 INR)"
-    return `${targetSymbol}${convertedAmount.toLocaleString()} (~${providerSymbol}${amount.toLocaleString()} ${providerCurrency})`;
+    return `${targetSymbol}${convertedAmount.toLocaleString()}`;
+  }
+
+  formatEmergencyNotice(notice?: string): string {
+    if (!notice) return '';
+    const localNum = this.localEmergencyNumber();
+    return notice.replace(/\b911(?:\s*\/\s*112)?\b/g, localNum);
   }
 }

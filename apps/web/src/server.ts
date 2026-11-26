@@ -14,8 +14,12 @@ const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
 
 const app = express();
+const allowedHosts = process.env['ALLOWED_HOSTS']
+  ? process.env['ALLOWED_HOSTS'].split(',').map((h) => h.trim()).filter(Boolean)
+  : ['localhost', '127.0.0.1', 'profilease.byfaraaz.com', 'profilease.io'];
+
 const angularApp = new AngularNodeAppEngine({
-  allowedHosts: ['*'],
+  allowedHosts,
 });
 
 // Parse JSON request bodies

@@ -41,10 +41,16 @@ describe('CurrencyService', () => {
     expect(service.convert(150, 'USD', 'USD')).toBe(150);
   });
 
-  it('should format price with converted and base currency when different', () => {
+  it('should format price in target currency without brackets when different', () => {
     const formatted = service.formatPrice(100, 'USD', 'INR');
-    expect(formatted).toContain('₹8,450');
-    expect(formatted).toContain('$100 USD');
+    expect(formatted).toBe('₹8,450');
+  });
+
+  it('should replace hardcoded 911 with detected local emergency number', () => {
+    service.localEmergencyNumber.set('112');
+    expect(service.formatEmergencyNotice('For emergencies, call 911 immediately.')).toBe(
+      'For emergencies, call 112 immediately.'
+    );
   });
 
   it('should format price simply when target matches provider currency', () => {

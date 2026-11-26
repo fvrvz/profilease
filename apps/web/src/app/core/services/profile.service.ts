@@ -120,4 +120,25 @@ export class ProfileService {
       : '';
     return this.http.get<DomainResolutionResponse>(`${base}/api/resolve-domain?host=${encodeURIComponent(host)}`);
   }
+
+  loadByCustomDomain(host: string): Observable<DomainResolutionResponse> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    return this.resolveCustomDomain(host).pipe(
+      tap((res) => {
+        if (res.matched && res.profile) {
+          this.currentProfile.set(res.profile);
+        } else {
+          this.currentProfile.set(null);
+          this.errorMessage.set(`No profile configured for domain "${host}".`);
+        }
+        this.isLoading.set(false);
+      }),
+      catchError((err: unknown) => {
+        this.errorMessage.set('Could not load profile for this domain.');
+        this.isLoading.set(false);
+        return throwError(() => err);
+      })
+    );
+  }
 }
