@@ -66,6 +66,26 @@ export class ClientAuthService {
     );
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<{ success: boolean; profile: UserProfile }> {
+    const profile = this.currentProfile();
+    return this.http
+      .post<{ success: boolean; profile: UserProfile }>('/api/client/change-password', {
+        profileId: profile?.id || '',
+        currentPassword,
+        newPassword,
+      })
+      .pipe(
+        tap((res) => {
+          if (res.success && res.profile) {
+            this.currentProfile.set(res.profile);
+            if (isPlatformBrowser(this.platformId)) {
+              localStorage.setItem(this.PROFILE_KEY, JSON.stringify(res.profile));
+            }
+          }
+        })
+      );
+  }
+
   logout(): void {
     this.isAuthenticated.set(false);
     this.currentProfile.set(null);

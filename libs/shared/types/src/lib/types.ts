@@ -95,6 +95,7 @@ export interface UserProfile {
   readonly timezone: string;
   readonly timingsNote?: string;
   readonly clientAccessKey?: string; // used for client portal login
+  readonly mustChangePassword?: boolean;
   readonly emergencyNotice?: string;
   readonly theme: ThemeVariant;
   readonly services: readonly ServiceItem[];
