@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { CurrencyService } from '@service/currency.service';
 import { SharpBadgeComponent } from '@shared/components/sharp-badge.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
@@ -17,6 +19,29 @@ interface TestimonialItem {
   templateUrl: './landing-page.component.html',
 })
 export class LandingPageComponent {
+  protected readonly currencyService = inject(CurrencyService);
+  private readonly http = inject(HttpClient);
+
+  readonly billingCycle = signal<'yearly' | 'half_yearly'>('yearly');
+  readonly hasOwnDomain = signal<boolean>(false);
+  readonly hasOwnHosting = signal<boolean>(false);
+  readonly checkoutLoadingPlan = signal<string | null>(null);
+  readonly checkoutError = signal<string | null>(null);
+
+  readonly headlessPriceUsd = computed<number>(() => {
+    const base = this.billingCycle() === 'yearly' ? 20 : 12;
+    const domainDiscount = this.hasOwnDomain() ? (this.billingCycle() === 'yearly' ? 6 : 3) : 0;
+    const hostingDiscount = this.hasOwnHosting() ? (this.billingCycle() === 'yearly' ? 4 : 2) : 0;
+    return Math.max(5, base - domainDiscount - hostingDiscount);
+  });
+
+  readonly proPriceUsd = computed<number>(() => {
+    const base = this.billingCycle() === 'yearly' ? 499 : 269;
+    const domainDiscount = this.hasOwnDomain() ? (this.billingCycle() === 'yearly' ? 15 : 8) : 0;
+    const hostingDiscount = this.hasOwnHosting() ? (this.billingCycle() === 'yearly' ? 80 : 40) : 0;
+    return Math.max(99, base - domainDiscount - hostingDiscount);
+  });
+
   readonly testimonials: readonly TestimonialItem[] = [
     {
       quote:
@@ -43,4 +68,31 @@ export class LandingPageComponent {
       tag: 'Consulting',
     },
   ];
+
+  subscribeWithPayPal(planId: 'headless' | 'pro'): void {
+    this.checkoutError.set(null);
+    this.checkoutLoadingPlan.set(planId);
+    const amountUsd = planId === 'headless' ? this.headlessPriceUsd() : this.proPriceUsd();
+
+    this.http
+      .post<{ approveUrl?: string }>('/api/billing/paypal/create-order', {
+        planId,
+        billingCycle: this.billingCycle(),
+        amountUsd,
+        hasOwnDomain: this.hasOwnDomain(),
+        hasOwnHosting: this.hasOwnHosting(),
+      })
+      .subscribe({
+        next: (res) => {
+          this.checkoutLoadingPlan.set(null);
+          if (res.approveUrl) {
+            window.open(res.approveUrl, '_blank', 'noopener,noreferrer');
+          }
+        },
+        error: () => {
+          this.checkoutLoadingPlan.set(null);
+          this.checkoutError.set('Unable to start PayPal checkout right now. Please try again.');
+        },
+      });
+  }
 }

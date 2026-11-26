@@ -20,6 +20,7 @@ body {
   color: #09090b;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Sharp inputs, buttons, and custom scrollbar */

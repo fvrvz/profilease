@@ -1,6 +1,8 @@
-name: Deploy to GitHub Pages
+name: Deploy Dev Environment to GitHub Pages
 
 on:
+  push:
+    branches: [develop]
   workflow_dispatch:
 
 permissions:
