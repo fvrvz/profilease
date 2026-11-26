@@ -104,24 +104,47 @@ export default {
       });
     }
 
-    // 3. Multi-Tenant Custom Domain Resolution on Root Path
-    // If accessing via custom domain (e.g. drelenavance.com), check D1 for matching profile
-    if (
-      cleanHost &&
-      !cleanHost.includes('workers.dev') &&
-      !cleanHost.includes('pages.dev') &&
-      cleanHost !== 'localhost' &&
-      cleanHost !== '127.0.0.1' &&
-      url.pathname === '/'
-    ) {
+    // 3. Strict Multi-Tenant Custom Domain Isolation
+    const isPlatformHost =
+      !cleanHost ||
+      cleanHost.includes('workers.dev') ||
+      cleanHost.includes('pages.dev') ||
+      cleanHost === 'localhost' ||
+      cleanHost === '127.0.0.1' ||
+      cleanHost === 'profilease.byfaraaz.com' ||
+      cleanHost === 'www.profilease.byfaraaz.com' ||
+      cleanHost === 'profilease.io' ||
+      cleanHost === 'www.profilease.io';
+
+    const isStaticAssetRequest = /\.[a-zA-Z0-9]{1,8}$/.test(url.pathname);
+
+    if (!isPlatformHost) {
       const row = await env.DB.prepare('SELECT slug FROM profiles WHERE LOWER(custom_domain) = ?')
         .bind(cleanHost)
         .first<{ slug: string }>();
 
-      if (row?.slug) {
-        // Rewrite internally to the practitioner's portfolio route
-        const rewrittenUrl = new URL(`/@${row.slug}`, url.origin);
-        return env.ASSETS.fetch(new Request(rewrittenUrl.toString(), request));
+      if (!row?.slug) {
+        if (isStaticAssetRequest) {
+          return env.ASSETS.fetch(request);
+        }
+        return new Response('Domain not configured', { status: 404 });
+      }
+
+      // Lock custom domain visitors strictly to '/' (never expose SaaS landing, /admin, /portal, or /@other)
+      if (url.pathname !== '/' && !isStaticAssetRequest) {
+        return Response.redirect(new URL('/', url.origin).toString(), 302);
+      }
+
+      if (url.pathname === '/') {
+        try {
+          const spaIndex = await env.ASSETS.fetch(new Request(new URL('/index.html', url.origin).toString(), request));
+          if (spaIndex.status !== 404) {
+            return spaIndex;
+          }
+        } catch {
+          // Fall through to index.csr.html
+        }
+        return env.ASSETS.fetch(new Request(new URL('/index.csr.html', url.origin).toString(), request));
       }
     }
 

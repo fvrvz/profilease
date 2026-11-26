@@ -270,6 +270,10 @@
               </div>
             }
 
+            <div class="p-3 bg-neutral-50 border border-neutral-300 text-neutral-700 text-xs font-mono">
+              No advance payment required — payment is settled in person after your consultation.
+            </div>
+
             <div class="flex items-center justify-between pt-4 border-t border-neutral-200">
               <app-sharp-button variant="secondary" (btnClick)="goToStep(2)">
                 ← Back
@@ -329,9 +333,15 @@
                 <span class="font-bold text-neutral-900">{{ confirmedBooking()?.appointmentTime }}</span>
               </div>
             </div>
-            <div class="border-t border-neutral-300 pt-3">
-              <span class="text-neutral-500 uppercase text-[10px] block">Location / Mode</span>
-              <span class="text-neutral-800">{{ profile().location }}</span>
+            <div class="border-t border-neutral-300 pt-3 flex flex-col gap-2">
+              <div>
+                <span class="text-neutral-500 uppercase text-[10px] block">Location / Mode</span>
+                <span class="text-neutral-800">{{ profile().location }}</span>
+              </div>
+              <div>
+                <span class="text-neutral-500 uppercase text-[10px] block">Payment</span>
+                <span class="text-neutral-800">Pay in person after service (no advance payment)</span>
+              </div>
             </div>
           </div>
 
