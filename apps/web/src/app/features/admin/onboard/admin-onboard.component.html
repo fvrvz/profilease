@@ -161,18 +161,6 @@
                 </div>
               </div>
 
-              <!-- Custom Domain -->
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
-                  Custom Domain (Optional)
-                </label>
-                <input
-                  type="text"
-                  [formField]="identityForm.customDomain"
-                  placeholder="e.g. drjordanhayes.com"
-                  class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
-                />
-              </div>
 
               <!-- Email -->
               <div>
@@ -478,16 +466,16 @@
           </div>
         }
 
-        <!-- STEP 4: THEME, DOMAIN & LAUNCH -->
+        <!-- STEP 4: THEME & LAUNCH -->
         @if (currentStep() === 4) {
           <div class="space-y-6">
             <div class="border-b border-neutral-200 pb-3">
               <h2 class="text-sm font-bold uppercase tracking-wider text-neutral-900 flex items-center gap-2">
                 <app-sharp-icon name="globe" customClass="w-4 h-4 text-neutral-700" />
-                Step 4: Design Theme & Custom Domain Hosting
+                Step 4: Design Theme &amp; Launch
               </h2>
               <p class="text-xs text-neutral-500 font-mono mt-0.5">
-                Pick a high-contrast pointy theme aesthetic and review domain routing.
+                Pick a high-contrast theme and review the practitioner's platform URL.
               </p>
             </div>
 
@@ -514,19 +502,19 @@
               </div>
             </div>
 
-            <!-- Custom Domain Instructions Box -->
+            <!-- Platform URL Info Box -->
             <div class="bg-neutral-50 border-2 border-neutral-900 p-5 font-mono text-xs space-y-2">
               <div class="flex items-center gap-2 font-bold uppercase text-neutral-900">
                 <app-sharp-icon name="globe" customClass="w-4 h-4 text-neutral-700" />
-                <span>Custom Domain Routing Information</span>
+                <span>Profile URL</span>
               </div>
               <p class="text-neutral-600 text-[11px]">
-                Clients can access their profile on either:
+                The practitioner's profile will be live at:
               </p>
               <ul class="list-disc list-inside text-neutral-700 text-[11px] space-y-1">
-                <li>Platform URL: <code class="bg-white px-1.5 py-0.5 border">profilease.io/&#64;{{ identityModel().slug || 'slug' }}</code></li>
-                <li>Direct Domain: <code class="bg-white px-1.5 py-0.5 border">{{ identityModel().customDomain || 'clientdomain.com' }}</code> (Point CNAME or A record to server IP)</li>
+                <li>Platform URL: <code class="bg-white px-1.5 py-0.5 border">profilease.byfaraaz.com/&#64;{{ identityModel().slug || 'slug' }}</code></li>
               </ul>
+              <p class="text-neutral-500 text-[10px] mt-1">Custom domain can be configured later via the Practitioner Portal → Profile settings.</p>
             </div>
 
             <!-- Summary Review Card -->
