@@ -82,7 +82,6 @@ export class AdminOnboardComponent {
     title: '',
     clinicOrSchoolName: '',
     slug: '',
-    customDomain: '',
     email: '',
     phone: '',
     location: '',
@@ -229,7 +228,6 @@ export class AdminOnboardComponent {
 
     const dto: CreateProfileDto = {
       slug: idVal.slug,
-      customDomain: idVal.customDomain || undefined,
       name: idVal.name,
       profession: resolvedProfession,
       title: idVal.title || `${resolvedProfession.toUpperCase()} Professional`,
