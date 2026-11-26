@@ -1,6 +1,7 @@
 import { Route, UrlMatcher, UrlSegment } from '@angular/router';
 import { adminGuard } from '@guards/admin.guard';
 import { clientGuard } from '@guards/client.guard';
+import { customDomainGuard } from '@guards/custom-domain.guard';
 
 export const atSlugMatcher: UrlMatcher = (segments: UrlSegment[]) => {
   if (segments.length === 1 && segments[0].path.startsWith('@')) {
@@ -19,13 +20,14 @@ export const appRoutes: Route[] = [
     path: '',
     title: 'Profilease — Professional Portfolios & Practice Booking',
     loadComponent: () =>
-      import('@features/landing/landing-page.component').then(
-        (m) => m.LandingPageComponent
+      import('@features/root/root-entry.component').then(
+        (m) => m.RootEntryComponent
       ),
   },
   // --- Admin Portal (Onboarding & Client Directory Only) ---
   {
     path: 'admin/login',
+    canActivate: [customDomainGuard],
     title: 'Sign In — Profilease Admin',
     loadComponent: () =>
       import('@features/admin/login/admin-login.component').then(
@@ -34,7 +36,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'admin',
-    canActivate: [adminGuard],
+    canActivate: [customDomainGuard, adminGuard],
     loadComponent: () =>
       import('@features/admin/admin-layout.component').then(
         (m) => m.AdminLayoutComponent
@@ -73,6 +75,7 @@ export const appRoutes: Route[] = [
   // --- Client Self-Service Portal (Appointments, Services, Timings, Availability) ---
   {
     path: 'portal/login',
+    canActivate: [customDomainGuard],
     title: 'Practitioner Portal Sign In — Profilease',
     loadComponent: () =>
       import('@features/portal/portal-login.component').then(
@@ -81,7 +84,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'portal',
-    canActivate: [clientGuard],
+    canActivate: [customDomainGuard, clientGuard],
     loadComponent: () =>
       import('@features/portal/portal-layout.component').then(
         (m) => m.PortalLayoutComponent
@@ -132,6 +135,7 @@ export const appRoutes: Route[] = [
   // --- Public Portfolio Routes ---
   {
     matcher: atSlugMatcher,
+    canActivate: [customDomainGuard],
     loadComponent: () =>
       import('@features/portfolio/portfolio-page.component').then(
         (m) => m.PortfolioPageComponent
@@ -139,6 +143,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'p/:slug',
+    canActivate: [customDomainGuard],
     loadComponent: () =>
       import('@features/portfolio/portfolio-page.component').then(
         (m) => m.PortfolioPageComponent

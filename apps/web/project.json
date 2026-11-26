@@ -24,7 +24,7 @@
           }
         ],
         "styles": [
-          "apps/web/src/styles.scss"
+          "apps/web/src/styles.css"
         ],
         "server": "apps/web/src/main.server.ts",
         "ssr": {
