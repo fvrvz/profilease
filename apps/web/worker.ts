@@ -142,8 +142,8 @@ export default {
 
       if (url.pathname === '/') {
         try {
-          const spaIndex = await env.ASSETS.fetch(new Request(new URL('/index.html', url.origin).toString(), request));
-          if (spaIndex.status !== 404) {
+          const spaIndex = await env.ASSETS.fetch(new Request(new URL('/', url.origin).toString(), request));
+          if (spaIndex.status === 200) {
             return spaIndex;
           }
         } catch {
@@ -163,10 +163,10 @@ export default {
       // Asset not found, continue to SPA fallback
     }
 
-    // SPA Fallback: Serve index.html or index.csr.html for Angular client-side routing
+    // SPA Fallback: Serve '/' (index.html) for Angular client-side routing without 307 redirect
     try {
-      const spaIndex = await env.ASSETS.fetch(new Request(new URL('/index.html', url.origin).toString(), request));
-      if (spaIndex.status !== 404) {
+      const spaIndex = await env.ASSETS.fetch(new Request(new URL('/', url.origin).toString(), request));
+      if (spaIndex.status === 200) {
         return spaIndex;
       }
     } catch {
