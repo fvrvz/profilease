@@ -3,16 +3,29 @@ import { adminGuard } from '@guards/admin.guard';
 import { clientGuard } from '@guards/client.guard';
 import { customDomainGuard } from '@guards/custom-domain.guard';
 
-export const atSlugMatcher: UrlMatcher = (segments: UrlSegment[]) => {
-  if (segments.length === 1 && segments[0].path.startsWith('@')) {
-    return {
-      consumed: segments,
-      posParams: {
-        slug: new UrlSegment(segments[0].path.slice(1), {}),
-      },
-    };
+const RESERVED_SLUGS = new Set<string>(['admin', 'portal', 'p', 'api']);
+
+export const portfolioSlugMatcher: UrlMatcher = (segments: UrlSegment[]) => {
+  if (segments.length !== 1) {
+    return null;
   }
-  return null;
+
+  const rawPath = segments[0].path;
+  if (!rawPath || rawPath.includes('.')) {
+    return null;
+  }
+
+  const cleanSlug = rawPath.startsWith('@') ? rawPath.slice(1) : rawPath;
+  if (!cleanSlug || RESERVED_SLUGS.has(cleanSlug.toLowerCase())) {
+    return null;
+  }
+
+  return {
+    consumed: segments,
+    posParams: {
+      slug: new UrlSegment(cleanSlug, {}),
+    },
+  };
 };
 
 export const appRoutes: Route[] = [
@@ -134,7 +147,7 @@ export const appRoutes: Route[] = [
   },
   // --- Public Portfolio Routes ---
   {
-    matcher: atSlugMatcher,
+    matcher: portfolioSlugMatcher,
     canActivate: [customDomainGuard],
     loadComponent: () =>
       import('@features/portfolio/portfolio-page.component').then(
