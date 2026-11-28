@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { SubscriptionPlan } from '@profilease/types';
 import { ProfileService } from '@service/profile.service';
 import { SharpBadgeComponent, BadgeVariant } from '@shared/components/sharp-badge.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
@@ -39,6 +40,11 @@ export class AdminDashboardComponent implements OnInit {
       default:
         return 'neutral';
     }
+  }
+
+  updatePlan(id: string, event: Event): void {
+    const plan = (event.target as HTMLSelectElement).value as SubscriptionPlan;
+    this.profileService.update({ id, subscriptionPlan: plan }).subscribe();
   }
 
   deleteProfile(id: string): void {

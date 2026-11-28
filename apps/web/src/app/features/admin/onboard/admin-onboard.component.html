@@ -189,17 +189,36 @@
               </div>
             </div>
 
-            <!-- Location -->
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
-                Office / Clinic Location & Address *
-              </label>
-              <input
-                type="text"
-                [formField]="identityForm.location"
-                placeholder="Suite 200, 100 Main Street, New York, NY"
-                class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
-              />
+            <!-- Service Mode & Location -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                  Service Delivery Mode
+                </label>
+                <app-sharp-select
+                  [options]="serviceModeOptions"
+                  [(value)]="selectedServiceMode"
+                  placeholder="Select Service Mode"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                  @if (selectedServiceMode() === 'home-visit') {
+                    Home Visit Service Area / City (Optional)
+                  } @else if (selectedServiceMode() === 'online') {
+                    Virtual Coverage / Region (Optional)
+                  } @else {
+                    Office / Clinic Location &amp; Address (Optional)
+                  }
+                </label>
+                <input
+                  type="text"
+                  [formField]="identityForm.location"
+                  [placeholder]="selectedServiceMode() === 'home-visit' ? 'e.g. Greater London — Home Visits' : 'Suite 200, 100 Main Street, New York, NY'"
+                  class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
+                />
+              </div>
             </div>
 
             <!-- Avatar Image Selection (Direct URL or R2 Upload & Crop) -->
@@ -451,6 +470,50 @@
               }
             </div>
 
+            <!-- Weekly Working Days & Hours -->
+            <div class="bg-neutral-50 border border-neutral-300 p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-900">
+                  Weekly Practice Days &amp; Hours (7 Days)
+                </h3>
+                <span class="text-[11px] font-mono text-neutral-500">Toggle all active days</span>
+              </div>
+              <div class="divide-y divide-neutral-200 border border-neutral-300 bg-white">
+                @for (dayItem of availabilitySchedule(); track dayItem.day; let i = $index) {
+                  <div class="px-3 py-2 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                    <label class="flex items-center gap-2 cursor-pointer min-w-28 font-bold">
+                      <input
+                        type="checkbox"
+                        [checked]="dayItem.enabled"
+                        (change)="toggleOnboardDay(i)"
+                        class="w-4 h-4 accent-neutral-900"
+                      />
+                      <span>{{ dayItem.day }}</span>
+                    </label>
+                    @if (dayItem.enabled) {
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="time"
+                          [value]="dayItem.startTime"
+                          (change)="updateOnboardDayTime(i, 'startTime', $event)"
+                          class="px-2 py-1 border border-neutral-300 text-xs"
+                        />
+                        <span>to</span>
+                        <input
+                          type="time"
+                          [value]="dayItem.endTime"
+                          (change)="updateOnboardDayTime(i, 'endTime', $event)"
+                          class="px-2 py-1 border border-neutral-300 text-xs"
+                        />
+                      </div>
+                    } @else {
+                      <span class="text-neutral-400 uppercase text-[11px]">Closed / Off</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+
             <div class="flex items-center justify-between pt-4 border-t border-neutral-200">
               <app-sharp-button variant="secondary" (btnClick)="currentStep.set(2)">
                 ← Back
@@ -477,6 +540,65 @@
               <p class="text-xs text-neutral-500 font-mono mt-0.5">
                 Pick a high-contrast theme and review the practitioner's platform URL.
               </p>
+            </div>
+
+            <!-- Subscription Plan & Corner Style -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-neutral-50 border border-neutral-300 p-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-2">
+                  Subscription Plan
+                </label>
+                <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                  @for (p of ['basic', 'mid', 'pro']; track p) {
+                    <button
+                      type="button"
+                      (click)="setPlan(p)"
+                      class="py-2 px-2 border-2 font-bold uppercase cursor-pointer"
+                      [class.border-neutral-900]="selectedPlan() === p"
+                      [class.bg-neutral-900]="selectedPlan() === p"
+                      [class.text-white]="selectedPlan() === p"
+                      [class.border-neutral-300]="selectedPlan() !== p"
+                    >{{ p }}</button>
+                  }
+                </div>
+                @if (selectedPlan() === 'basic') {
+                  <label class="flex items-center gap-2 mt-2 text-[11px] font-mono cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="customDomainAddon()"
+                      (change)="customDomainAddon.set(!customDomainAddon())"
+                      class="w-3.5 h-3.5 accent-neutral-900"
+                    />
+                    <span>Enable Basic Custom Domain Add-on</span>
+                  </label>
+                }
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-2">
+                  Border Corners (All Plans)
+                </label>
+                <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+                  <button
+                    type="button"
+                    (click)="selectedBorderStyle.set('sharp')"
+                    class="py-2 px-2 border-2 font-bold uppercase cursor-pointer"
+                    [class.border-neutral-900]="selectedBorderStyle() === 'sharp'"
+                    [class.bg-neutral-900]="selectedBorderStyle() === 'sharp'"
+                    [class.text-white]="selectedBorderStyle() === 'sharp'"
+                    [class.border-neutral-300]="selectedBorderStyle() !== 'sharp'"
+                  >■ Sharp</button>
+                  <button
+                    type="button"
+                    (click)="selectedBorderStyle.set('rounded')"
+                    class="py-2 px-2 border-2 font-bold uppercase cursor-pointer"
+                    [class.border-neutral-900]="selectedBorderStyle() === 'rounded'"
+                    [class.bg-neutral-900]="selectedBorderStyle() === 'rounded'"
+                    [class.text-white]="selectedBorderStyle() === 'rounded'"
+                    [class.border-neutral-300]="selectedBorderStyle() !== 'rounded'"
+                  >● Rounded</button>
+                </div>
+              </div>
             </div>
 
             <!-- Theme Picker -->
@@ -512,7 +634,7 @@
                 The practitioner's profile will be live at:
               </p>
               <ul class="list-disc list-inside text-neutral-700 text-[11px] space-y-1">
-                <li>Platform URL: <code class="bg-white px-1.5 py-0.5 border">profilease.byfaraaz.com/&#64;{{ identityModel().slug || 'slug' }}</code></li>
+                <li>Platform URL: <code class="bg-white px-1.5 py-0.5 border">{{ tenantContext.platformHost() }}/&#64;{{ identityModel().slug || 'slug' }}</code></li>
               </ul>
               <p class="text-neutral-500 text-[10px] mt-1">Custom domain can be configured later via the Practitioner Portal → Profile settings.</p>
             </div>

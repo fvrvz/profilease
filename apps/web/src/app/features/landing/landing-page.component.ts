@@ -38,6 +38,14 @@ export class LandingPageComponent {
     return Math.max(10, base - domainDiscount - hostingDiscount);
   });
 
+  // Mid / Growth plan: $89/yr; includes layouts, secondary view, Google Reviews, custom domain.
+  readonly midPriceUsd = computed<number>(() => {
+    const base = this.billingCycle() === 'yearly' ? 89 : 49;
+    const domainDiscount = this.hasOwnDomain() ? (this.billingCycle() === 'yearly' ? 10 : 5) : 0;
+    const hostingDiscount = this.hasOwnHosting() ? (this.billingCycle() === 'yearly' ? 15 : 8) : 0;
+    return Math.max(49, base - domainDiscount - hostingDiscount);
+  });
+
   // Pro plan: $299/yr full white-label; discounts for own domain / hosting.
   readonly proPriceUsd = computed<number>(() => {
     const base = this.billingCycle() === 'yearly' ? 299 : 169;
@@ -73,10 +81,15 @@ export class LandingPageComponent {
     },
   ];
 
-  subscribeWithPayPal(planId: 'headless' | 'pro'): void {
+  subscribeWithPayPal(planId: 'headless' | 'mid' | 'pro'): void {
     this.checkoutError.set(null);
     this.checkoutLoadingPlan.set(planId);
-    const amountUsd = planId === 'headless' ? this.headlessPriceUsd() : this.proPriceUsd();
+    const amountUsd =
+      planId === 'headless'
+        ? this.headlessPriceUsd()
+        : planId === 'mid'
+          ? this.midPriceUsd()
+          : this.proPriceUsd();
 
     this.http
       .post<{ approveUrl?: string }>('/api/billing/paypal/create-order', {

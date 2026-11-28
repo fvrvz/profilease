@@ -19,8 +19,8 @@ export class ClientAuthService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem(this.TOKEN_KEY);
-      const profileJson = localStorage.getItem(this.PROFILE_KEY);
+      const token = sessionStorage.getItem(this.TOKEN_KEY);
+      const profileJson = sessionStorage.getItem(this.PROFILE_KEY);
       if (token && profileJson) {
         try {
           const profile = JSON.parse(profileJson) as UserProfile;
@@ -40,8 +40,8 @@ export class ClientAuthService {
           this.isAuthenticated.set(true);
           this.currentProfile.set(res.profile);
           if (isPlatformBrowser(this.platformId)) {
-            localStorage.setItem(this.TOKEN_KEY, res.token);
-            localStorage.setItem(this.PROFILE_KEY, JSON.stringify(res.profile));
+            sessionStorage.setItem(this.TOKEN_KEY, res.token);
+            sessionStorage.setItem(this.PROFILE_KEY, JSON.stringify(res.profile));
           }
         }
       }),
@@ -60,7 +60,7 @@ export class ClientAuthService {
       tap((updated) => {
         this.currentProfile.set(updated);
         if (isPlatformBrowser(this.platformId)) {
-          localStorage.setItem(this.PROFILE_KEY, JSON.stringify(updated));
+          sessionStorage.setItem(this.PROFILE_KEY, JSON.stringify(updated));
         }
       })
     );
@@ -79,19 +79,30 @@ export class ClientAuthService {
           if (res.success && res.profile) {
             this.currentProfile.set(res.profile);
             if (isPlatformBrowser(this.platformId)) {
-              localStorage.setItem(this.PROFILE_KEY, JSON.stringify(res.profile));
+              sessionStorage.setItem(this.PROFILE_KEY, JSON.stringify(res.profile));
             }
           }
         })
       );
   }
 
+  requestPasswordReset(email: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>('/api/client/forgot-password', { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>('/api/client/reset-password', {
+      token,
+      newPassword,
+    });
+  }
+
   logout(): void {
     this.isAuthenticated.set(false);
     this.currentProfile.set(null);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.PROFILE_KEY);
+      sessionStorage.removeItem(this.TOKEN_KEY);
+      sessionStorage.removeItem(this.PROFILE_KEY);
     }
     this.router.navigate(['/portal/login']);
   }

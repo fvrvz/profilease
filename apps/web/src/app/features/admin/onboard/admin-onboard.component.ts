@@ -2,7 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { form, FormField, required, email } from '@angular/forms/signals';
 import {
+  BorderStyle,
   CreateProfileDto,
+  ServiceMode,
+  SubscriptionPlan,
   ThemeVariant,
   ServiceItem,
   DayAvailability,
@@ -11,6 +14,7 @@ import {
 } from '@profilease/types';
 import { ProfileService } from '@service/profile.service';
 import { CurrencyService } from '@service/currency.service';
+import { TenantContextService } from '@service/tenant-context.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 import { SharpImageUploaderComponent } from '@shared/components/sharp-image-uploader.component';
@@ -31,6 +35,7 @@ import { SharpSelectComponent, SharpSelectOption } from '@shared/components/shar
 export class AdminOnboardComponent {
   protected readonly profileService = inject(ProfileService);
   protected readonly currencyService = inject(CurrencyService);
+  protected readonly tenantContext = inject(TenantContextService);
   private readonly router = inject(Router);
 
   readonly currentStep = signal<number>(1);
@@ -75,6 +80,46 @@ export class AdminOnboardComponent {
 
   readonly newSocialPlatform = signal<string>('linkedin');
   readonly socialLinksList = signal<SocialLink[]>([]);
+
+  readonly serviceModeOptions: readonly SharpSelectOption[] = [
+    { value: 'clinic', label: 'In-Clinic / Office', sublabel: 'Fixed physical office or clinic address', icon: 'globe' },
+    { value: 'home-visit', label: 'Home Visits / Mobile Service', sublabel: 'Nurse, physiotherapist, or home-care visits', icon: 'user' },
+    { value: 'online', label: 'Online / Telehealth Only', sublabel: '100% remote video or phone consultations', icon: 'globe' },
+    { value: 'hybrid', label: 'Hybrid (Clinic + Home / Online)', sublabel: 'Multiple consultation modes available', icon: 'star' },
+  ];
+  readonly selectedServiceMode = signal<string>('clinic');
+  readonly selectedPlan = signal<SubscriptionPlan>('basic');
+  readonly selectedBorderStyle = signal<BorderStyle>('sharp');
+  readonly customDomainAddon = signal<boolean>(false);
+
+  setPlan(plan: string): void {
+    if (plan === 'basic' || plan === 'mid' || plan === 'pro') {
+      this.selectedPlan.set(plan);
+    }
+  }
+
+  readonly availabilitySchedule = signal<DayAvailability[]>([
+    { day: 'Monday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
+    { day: 'Tuesday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
+    { day: 'Wednesday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
+    { day: 'Thursday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
+    { day: 'Friday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
+    { day: 'Saturday', enabled: false, startTime: '10:00', endTime: '14:00', slotDurationMinutes: 30 },
+    { day: 'Sunday', enabled: false, startTime: '10:00', endTime: '14:00', slotDurationMinutes: 30 },
+  ]);
+
+  toggleOnboardDay(index: number): void {
+    this.availabilitySchedule.update((prev) =>
+      prev.map((d, i) => (i === index ? { ...d, enabled: !d.enabled } : d))
+    );
+  }
+
+  updateOnboardDayTime(index: number, field: 'startTime' | 'endTime', event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.availabilitySchedule.update((prev) =>
+      prev.map((d, i) => (i === index ? { ...d, [field]: val } : d))
+    );
+  }
 
   // Signal Form for identity (clean empty slate, no prefilled values)
   readonly identityModel = signal({
@@ -216,16 +261,6 @@ export class AdminOnboardComponent {
         ? this.customProfession().trim()
         : this.selectedProfessionStr();
 
-    const defaultAvailability: DayAvailability[] = [
-      { day: 'Monday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
-      { day: 'Tuesday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
-      { day: 'Wednesday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
-      { day: 'Thursday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
-      { day: 'Friday', enabled: true, startTime: '09:00', endTime: '15:00', slotDurationMinutes: 30 },
-      { day: 'Saturday', enabled: false, startTime: '10:00', endTime: '13:00', slotDurationMinutes: 30 },
-      { day: 'Sunday', enabled: false, startTime: '10:00', endTime: '13:00', slotDurationMinutes: 30 },
-    ];
-
     const dto: CreateProfileDto = {
       slug: idVal.slug,
       name: idVal.name,
@@ -235,14 +270,24 @@ export class AdminOnboardComponent {
       bio: bioVal.bio || 'Dedicated professional offering personalized client consultations and services.',
       aboutDetailed: bioVal.aboutDetailed || 'Providing excellence through rigorous standards and compassionate guidance.',
       avatarUrl: idVal.avatarUrl,
-      location: idVal.location || 'Consultation Office / Remote',
+      location:
+        idVal.location.trim() ||
+        (this.selectedServiceMode() === 'home-visit'
+          ? 'Home Visit Coverage Area'
+          : this.selectedServiceMode() === 'online'
+            ? 'Online / Remote Worldwide'
+            : 'Consultation Office'),
+      serviceMode: this.selectedServiceMode() as ServiceMode,
       clinicOrSchoolName: idVal.clinicOrSchoolName || `${idVal.name}'s Practice`,
       email: idVal.email,
       phone: idVal.phone,
       emergencyNotice: bioVal.emergencyNotice || undefined,
       theme: this.selectedTheme(),
+      subscriptionPlan: this.selectedPlan(),
+      borderStyle: this.selectedBorderStyle(),
+      customDomainAddon: this.customDomainAddon(),
       services: this.servicesList(),
-      availability: defaultAvailability,
+      availability: this.availabilitySchedule(),
       testimonials: [],
       socialLinks: this.socialLinksList(),
       country: this.currencyService.detectedUserCountry() || 'United States',
