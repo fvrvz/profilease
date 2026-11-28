@@ -216,7 +216,7 @@ export class PortalPlanComponent {
     }
 
     this.http
-      .post<{ approvalUrl?: string; error?: string }>('/api/billing/paypal/create-order', {
+      .post<{ approveUrl?: string; error?: string }>('/api/billing/paypal/create-order', {
         planId,
         billingCycle: this.billingCycle(),
         amountUsd,
@@ -224,8 +224,8 @@ export class PortalPlanComponent {
       .subscribe({
         next: (res) => {
           this.toast.stopLoading();
-          if (res.approvalUrl && isPlatformBrowser(this.platformId)) {
-            window.location.href = res.approvalUrl;
+          if (res.approveUrl && isPlatformBrowser(this.platformId)) {
+            window.location.href = res.approveUrl;
             return;
           }
           this.toast.showError(res.error || 'PayPal checkout URL was not returned.');

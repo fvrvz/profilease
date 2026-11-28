@@ -1,28 +1,28 @@
 <div class="min-h-screen bg-neutral-100 text-neutral-900 flex flex-col font-sans">
       <!-- Top Client Header -->
       <header class="bg-neutral-900 text-white border-b-2 border-neutral-900 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
           <!-- Client Brand / Identity -->
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2.5 min-w-0">
             @if (authService.currentProfile()?.avatarUrl) {
               <img
                 [src]="authService.currentProfile()?.avatarUrl"
                 [alt]="authService.currentProfile()?.name"
-                class="w-9 h-9 object-cover border-2 border-white"
+                class="w-9 h-9 object-cover border-2 border-white shrink-0"
               />
             } @else {
-              <span class="w-4 h-4 bg-white"></span>
+              <span class="w-4 h-4 bg-white shrink-0"></span>
             }
-            <div>
+            <div class="min-w-0">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-black uppercase tracking-tight text-white">
+                <span class="text-xs font-black uppercase tracking-tight text-white truncate">
                   {{ authService.currentProfile()?.name || 'Practitioner Portal' }}
                 </span>
-                <span class="px-1.5 py-0.2 bg-emerald-500 text-neutral-950 font-mono text-[9px] uppercase font-bold">
+                <span class="hidden sm:inline-block px-1.5 py-0.2 bg-emerald-500 text-neutral-950 font-mono text-[9px] uppercase font-bold shrink-0">
                   {{ authService.currentProfile()?.profession || 'Client' }}
                 </span>
               </div>
-              <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block leading-none mt-0.5">
+              <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block leading-none mt-0.5 truncate">
                 {{ authService.currentProfile()?.clinicOrSchoolName || 'Profilease Autonomous Portal' }}
               </span>
             </div>
@@ -90,12 +90,68 @@
             <button
               type="button"
               (click)="logout()"
-              class="px-3 py-1.5 bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-300 text-xs font-mono font-bold uppercase transition-colors cursor-pointer border border-neutral-700"
+              class="px-3 py-1.5 bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-300 text-xs font-mono font-bold uppercase transition-colors cursor-pointer border border-neutral-700 shrink-0"
             >
               Logout
             </button>
           </div>
         </div>
+
+        <!-- Mobile / Tablet Scrollable Nav -->
+        <nav class="md:hidden border-t border-neutral-800 bg-neutral-950 px-3 py-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap font-mono text-[11px] uppercase font-bold">
+          <a
+            routerLink="/portal"
+            routerLinkActive="bg-white text-neutral-900"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+          >
+            Appointments
+          </a>
+          <a
+            routerLink="/portal/services"
+            routerLinkActive="bg-white text-neutral-900"
+            class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+          >
+            Services
+          </a>
+          <a
+            routerLink="/portal/availability"
+            routerLinkActive="bg-white text-neutral-900"
+            class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+          >
+            Timings
+          </a>
+          <a
+            routerLink="/portal/profile"
+            routerLinkActive="bg-white text-neutral-900"
+            class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+          >
+            Profile
+          </a>
+          <a
+            routerLink="/portal/appearance"
+            routerLinkActive="bg-white text-neutral-900"
+            class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+          >
+            Appearance
+          </a>
+          <a
+            routerLink="/portal/plan"
+            routerLinkActive="bg-white text-neutral-900"
+            class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+          >
+            Plan
+          </a>
+          @if (authService.currentProfile()?.slug; as slug) {
+            <a
+              [routerLink]="['/@' + slug]"
+              target="_blank"
+              class="px-3 py-1.5 text-emerald-400 border border-emerald-700 shrink-0"
+            >
+              Live &rarr;
+            </a>
+          }
+        </nav>
       </header>
 
       <!-- Main Portal Layout Body -->
