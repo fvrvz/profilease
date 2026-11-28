@@ -1,131 +1,96 @@
-# Profilease ⚡
+# Profilease
 
-**Bespoke Portfolio & Booking Engine for Doctors, Teachers, and Professionals.**
+Multi-tenant portfolio and appointment booking platform for independent practitioners (doctors, educators, consultants).
 
-Built on **Angular v22** with Zoneless Signal Architecture, **Signal Forms (`@angular/forms/signals`)**, strictly typed TypeScript, and an **Inbuilt Angular SSR Backend** with Multi-Tenant Custom Domain Resolution.
+Live instance: [profilease.byfaraaz.com](https://profilease.byfaraaz.com)
 
----
+## Stack
 
-## 🚀 Features
+- **Frontend**: Angular 22 (zoneless, signal forms), Tailwind CSS, `@jsverse/transloco` (`en` / `hi`)
+- **API / Edge Worker**: Hono + Drizzle ORM running on Cloudflare Workers (`apps/web/worker.ts`)
+- **Database**: Cloudflare D1 (SQLite) with SQL migrations in `migrations/`
+- **Payments**: PayPal (`@paypal/paypal-server-sdk`)
+- **Email & Storage**: Resend for transactional emails, Tigris (S3-compatible) for media uploads
+- **Monorepo**: Nx (`apps/web`, `apps/notifications`, `libs/shared/types`)
 
-- **Architectural Pointy Aesthetic**: Strict zero rounded corners (`border-radius: 0px !important;`), high-contrast neo-brutalist cards, crisp typography, and sharp badges.
-- **Dynamic Portfolio Presets**:
-  - **Medical & Healthcare**: Clinical credentials, emergency notice banners, specialized consultations, clinic hours.
-  - **Academic & Education**: Faculty honors, course mentorship cards, research guidance, academic calendar.
-  - **Executive & Wellness**: Obsidian & warm amber themes for coaches and consultants.
-- **Signal Forms Scheduling Engine**:
-  - Built using Angular v22 `@angular/forms/signals` (`form()`, `FormField`, `required`, `email`).
-  - Interactive date picker, slot calculation based on weekly availability, patient/student intake form, and instant confirmation receipt.
-- **Admin Control Room (`/admin`)**:
-  - Role-guarded via functional `adminGuard`.
-  - Client Onboarding Wizard: Step-by-step onboarding for new practitioners.
-  - Appointment Management: Filter, approve, cancel, or complete bookings.
-  - Custom Domains Manager: Manage and verify client custom domain host mappings.
-- **Inbuilt Backend with Host Header Mapping**:
-  - Runs in Angular's SSR server (`apps/web/src/server.ts`) via Express.
-  - Inspects incoming `Host` header (e.g., `drelenavance.com`) to serve the client's portfolio transparently as an independent website.
-- **Zero `any` TypeScript**: Strict type safety end-to-end with shared models in `@profilease/types`.
+## Project Layout
 
----
-
-## 🛠️ Getting Started
-
-### Prerequisites
-- Node.js 22+
-- npm 10+
-
-### Installation & Local Development
-
-```bash
-# Install dependencies
-npm ci
-
-# Start development server
-npm run dev
-
-# Or build and start the SSR production server with built-in API
-npm run build
-npm start
+```text
+apps/
+  web/                Angular app + Cloudflare Worker API (src/worker/)
+  notifications/      NestJS notification worker
+libs/
+  shared/types/       Shared TypeScript types & plan capabilities (@profilease/types)
+migrations/           D1 SQL migrations (0001 .. 0005)
+wrangler.jsonc        Cloudflare Worker & D1 configuration
 ```
 
-Navigate to:
-- Public Showcase & Directory: `http://localhost:4000/`
-- Dr. Vance's Medical Profile: `http://localhost:4000/@dr-elena-vance`
-- Prof. Chen's Academic Profile: `http://localhost:4000/@prof-marcus-chen`
-- Admin Portal: `http://localhost:4000/admin`
-- Practitioner Portal: `http://localhost:4000/portal`
+## Local Development
 
----
-
-## 🔐 Access Portals & Credentials
-
-> [!NOTE]
-> All UI pre-filled credential helpers have been removed from the production interface for security. Use the credentials below to log into the respective dashboards:
-
-### 1. System Administration (`/admin`)
-- **Dashboard URL**: `http://localhost:4000/admin` *(or [Cloudflare Edge Live](https://profilease-web.codefaraaz.workers.dev/admin))*
-- **Admin Email**: `admin@profilease.io`
-- **Password**: `admin123`
-- **Capabilities**: Onboard new practitioners, configure custom domains, review and update all client appointments.
-
-### 2. Practitioner Self-Service Portal (`/portal`)
-- **Portal URL**: `http://localhost:4000/portal` *(or [Cloudflare Edge Live](https://profilease-web.codefaraaz.workers.dev/portal))*
-
-| Practitioner | Registered Email | Access Key |
-| :--- | :--- | :--- |
-| **Dr. Elena Vance, MD** | `contact@drelenavance.com` | `elena2026` *(or `vance2026`)* |
-| **Prof. Marcus Chen, M.Sc.** | `marcus@chenphysics.edu` | `marcus2026` *(or `chen2026`)* |
-
-- **Capabilities**: Manage services and consultation pricing, set multi-currency preferences, configure weekly working hour availability, accept or decline bookings.
-
----
-
-## 🧪 Testing
+Requirements: Node.js 22+ and npm 10+.
 
 ```bash
-# Run unit tests
+git clone https://github.com/fvrvz/profilease.git
+cd profilease
+npm ci
+cp .env.example .env
+```
+
+Start the Angular dev server:
+
+```bash
+npm run dev
+```
+
+Build the app and test the Worker locally with Wrangler:
+
+```bash
+npm run build
+npx wrangler d1 migrations apply profilease-db --local
+npx wrangler dev
+```
+
+## Testing & Verification
+
+Before opening a PR, make sure the Worker typecheck, production build, unit tests, and Wrangler dry-run all pass:
+
+```bash
+# Worker strict typecheck
+npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --strict --skipLibCheck --types @cloudflare/workers-types apps/web/worker.ts
+
+# Web production build
+npm run build
+
+# Unit tests
 npm test
 
-# Run affected tests only (Difference Test)
-npm run test:affected
+# Worker bundle check
+npx wrangler deploy --dry-run
 ```
 
----
+## Custom Domains
 
-## 🐳 Docker Deployment
+Practitioners can serve their portfolio from their own domain (for example, `clinic.example.com`):
 
-A multi-stage, lightweight production Dockerfile is included:
+1. Point a `CNAME` record (subdomain) or `A` record (apex) to the Cloudflare Worker host.
+2. Register the domain in the admin domain manager (`/admin`).
+3. Requests whose `Host` / `X-Forwarded-Host` header is not listed in `PLATFORM_HOSTS` (`wrangler.jsonc`) are resolved to the matching practitioner profile on `/`.
 
-```bash
-# Build the production Docker image
-docker build -t profilease .
+## Contributing
 
-# Run the container
-docker run -d -p 4000:4000 --name profilease profilease
-```
+Contributions are welcome. This repository uses `develop` as the integration branch and `main` for production releases.
 
-The container runs as an unprivileged non-root user (`profilease:1001`) with an integrated healthcheck endpoint.
+1. Fork the repository and create a branch from `develop`:
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git checkout -b fix/your-change
+   ```
+2. Keep changes focused. If you modify the D1 schema (`apps/web/src/worker/db/schema.ts`), add a numbered migration file in `migrations/`.
+3. Run the verification commands listed above (`tsc`, `npm run build`, `npm test`).
+4. Commit your changes and open a pull request targeting **`develop`** (do not open PRs directly against `main`).
+5. Ensure all CI checks pass before review.
 
----
+## License
 
-## 🌐 Custom Domain Setup for Clients
-
-To point an external domain (e.g. `drelenavance.com`) to a client's Profilease website:
-
-1. **CNAME Record (Subdomain)**:
-   - Type: `CNAME`
-   - Host: `www` or `clinic`
-   - Target: `profilease.io`
-2. **A Record (Root/Apex Domain)**:
-   - Type: `A`
-   - Host: `@`
-   - Target: `YOUR_SERVER_IP`
-
-The internal host-header resolution middleware inspects the request hostname and automatically renders the client's portfolio on the root route `/`.
-
----
-
-## 🔄 GitHub Actions Workflows
-
-- **`.github/workflows/ci.yml`**: Automatically runs on push/PR, installs dependencies, calculates git SHA diff, tests **affected projects only** to save CI time, and validates the build.
-- **`.github/workflows/deploy-pages.yml`**: Automatically builds the browser client with SPA routing fallback (`404.html`) and deploys to **GitHub Pages**.
+Licensed under the [MIT License](LICENSE).
