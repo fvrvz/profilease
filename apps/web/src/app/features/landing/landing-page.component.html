@@ -16,15 +16,23 @@
         <a href="#testimonials" class="hover:text-white transition-colors">Testimonials</a>
       </nav>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 shrink-0">
         <a
           routerLink="/portal"
-          class="px-4 py-2 bg-white text-neutral-900 hover:bg-neutral-200 text-xs font-mono font-bold uppercase tracking-wider border border-white transition-colors"
+          class="px-3 sm:px-4 py-2 bg-white text-neutral-900 hover:bg-neutral-200 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider border border-white transition-colors whitespace-nowrap"
         >
-          Practitioner Portal &rarr;
+          Portal &rarr;
         </a>
       </div>
     </div>
+
+    <!-- Mobile / Tablet Scrollable Nav -->
+    <nav class="md:hidden border-t border-neutral-800 bg-neutral-950 px-3 py-2 flex items-center gap-3 overflow-x-auto whitespace-nowrap text-[11px] font-mono font-bold uppercase tracking-wider text-neutral-300">
+      <a href="#features" class="hover:text-white shrink-0">Features</a>
+      <a href="#workflow" class="hover:text-white shrink-0">How It Works</a>
+      <a href="#pricing" class="hover:text-white shrink-0">Pricing</a>
+      <a href="#testimonials" class="hover:text-white shrink-0">Testimonials</a>
+    </nav>
   </header>
 
   <!-- HERO BANNER -->
