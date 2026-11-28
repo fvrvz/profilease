@@ -440,7 +440,7 @@
             @if (!(profile()?.subscriptionPlan === 'pro' && profile()?.hidePlatformBranding)) {
               <div class="flex items-center gap-4 text-neutral-400">
                 @if (tenantContext.isCustomDomain()) {
-                  <a href="https://profilease.byfaraaz.com" target="_blank" rel="noopener noreferrer" class="hover:text-white underline">
+                  <a [href]="tenantContext.platformUrl()" target="_blank" rel="noopener noreferrer" class="hover:text-white underline">
                     Generated with Profilease
                   </a>
                 } @else {

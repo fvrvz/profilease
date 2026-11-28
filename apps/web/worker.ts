@@ -25,23 +25,49 @@ app.route('/api/billing', billingRoutes);
 
 app.all('/api/*', (c) => c.json({ error: 'Endpoint not found' }, 404));
 
-const PLATFORM_HOSTS = new Set<string>([
-  'localhost',
-  '127.0.0.1',
-  'profilease.byfaraaz.com',
-  'www.profilease.byfaraaz.com',
-  'profilease.io',
-  'www.profilease.io',
-]);
+const DEFAULT_LOCAL_HOSTS = ['localhost', '127.0.0.1'];
 
-async function serveSpaIndex(env: Env, url: URL, request: Request): Promise<Response> {
+function getPlatformHosts(env: Env): Set<string> {
+  const configured = (env.PLATFORM_HOSTS || '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set<string>([...DEFAULT_LOCAL_HOSTS, ...configured]);
+}
+
+async function serveSpaIndex(
+  env: Env,
+  url: URL,
+  request: Request,
+  isCustomDomain: boolean
+): Promise<Response> {
+  let response: Response;
   try {
     const spaIndex = await env.ASSETS.fetch(new Request(new URL('/', url.origin).toString(), request));
-    if (spaIndex.status === 200) return spaIndex;
+    if (spaIndex.status === 200) {
+      response = spaIndex;
+    } else {
+      response = await env.ASSETS.fetch(new Request(new URL('/index.csr.html', url.origin).toString(), request));
+    }
   } catch {
-    // Fall through to index.csr.html
+    response = await env.ASSETS.fetch(new Request(new URL('/index.csr.html', url.origin).toString(), request));
   }
-  return env.ASSETS.fetch(new Request(new URL('/index.csr.html', url.origin).toString(), request));
+
+  const platformUrl = env.PLATFORM_URL || 'https://profilease.byfaraaz.com';
+  return new HTMLRewriter()
+    .on('head', {
+      element(el) {
+        el.append(
+          `<meta name="profilease-is-custom-domain" content="${isCustomDomain ? 'true' : 'false'}" />`,
+          { html: true }
+        );
+        el.append(
+          `<meta name="profilease-platform-url" content="${platformUrl}" />`,
+          { html: true }
+        );
+      },
+    })
+    .transform(response);
 }
 
 export default {
@@ -53,11 +79,13 @@ export default {
 
     const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.hostname;
     const cleanHost = rawHost.split(':')[0].toLowerCase().trim();
+    const platformHosts = getPlatformHosts(env);
     const isPlatformHost =
       !cleanHost ||
-      cleanHost.includes('workers.dev') ||
-      cleanHost.includes('pages.dev') ||
-      PLATFORM_HOSTS.has(cleanHost);
+      cleanHost.endsWith('.workers.dev') ||
+      cleanHost.endsWith('.pages.dev') ||
+      cleanHost.endsWith('.github.io') ||
+      platformHosts.has(cleanHost);
     const isStaticAssetRequest = /\.[a-zA-Z0-9]{1,8}$/.test(url.pathname);
 
     if (!isPlatformHost) {
@@ -77,17 +105,23 @@ export default {
         return Response.redirect(new URL('/', url.origin).toString(), 302);
       }
       if (url.pathname === '/') {
-        return serveSpaIndex(env, url, request);
+        return serveSpaIndex(env, url, request, true);
       }
     }
 
     try {
       const assetResponse = await env.ASSETS.fetch(request);
-      if (assetResponse.status !== 404) return assetResponse;
+      if (assetResponse.status !== 404) {
+        const contentType = assetResponse.headers.get('content-type') || '';
+        if (contentType.includes('text/html')) {
+          return serveSpaIndex(env, url, request, false);
+        }
+        return assetResponse;
+      }
     } catch {
       // Fall through to SPA fallback
     }
 
-    return serveSpaIndex(env, url, request);
+    return serveSpaIndex(env, url, request, false);
   },
 };
