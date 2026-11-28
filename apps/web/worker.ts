@@ -200,6 +200,14 @@ export default {
   },
 };
 
+async function parseJson<T extends object>(request: Request): Promise<T> {
+  try {
+    return (await request.json<T>()) ?? ({} as T);
+  } catch {
+    return {} as T;
+  }
+}
+
 async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionContext): Promise<Response> {
   const path = url.pathname;
   const method = request.method;
@@ -230,7 +238,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/profiles (Admin onboard client profile) ---
   if (path === '/api/profiles' && method === 'POST') {
-    const body = await request.json<{
+    const body = await parseJson<{
       id?: string;
       slug?: string;
       name?: string;
@@ -258,7 +266,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       testimonials?: Array<{ id?: string; clientName: string; roleOrCondition: string; comment: string; rating: number; date: string }>;
       services?: Array<{ id?: string; name?: string; title?: string; description?: string; durationMinutes?: number; price?: number; category?: string; tags?: string[]; isActive?: boolean }>;
       availability?: Array<{ id?: string; day?: string; dayOfWeek?: string; enabled: boolean; startTime?: string; endTime?: string; slotDurationMinutes?: number }>;
-    }>().catch(() => ({}));
+    }>(request);
 
     if (!body || !body.name || !body.slug || !body.profession) {
       return Response.json({ error: 'Missing required profile fields (name, slug, profession)' }, { status: 400 });
@@ -371,7 +379,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
   // --- PUT /api/profiles/:id (Admin update profile) ---
   if (path.startsWith('/api/profiles/') && method === 'PUT') {
     const id = path.replace('/api/profiles/', '').trim();
-    const body = await request.json<{
+    const body = await parseJson<{
       name?: string;
       title?: string;
       bio?: string;
@@ -387,7 +395,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       subscriptionPlan?: string;
       customDomainAddon?: boolean;
       extraServiceSlots?: number;
-    }>().catch(() => ({}));
+    }>(request);
 
     const current = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(id).first<ProfileRow>();
     if (!current) {
@@ -468,7 +476,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/admin/login ---
   if (path === '/api/admin/login' && method === 'POST') {
-    const body = await request.json<{ email?: string; password?: string }>().catch(() => ({}));
+    const body = await parseJson<{ email?: string; password?: string }>(request);
     if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') {
       return Response.json({ error: 'Invalid email or password payload' }, { status: 400 });
     }
@@ -490,7 +498,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/client/login ---
   if (path === '/api/client/login' && method === 'POST') {
-    const body = await request.json<{ email?: string; accessKey?: string }>().catch(() => ({}));
+    const body = await parseJson<{ email?: string; accessKey?: string }>(request);
     if (!body.email || !body.accessKey) {
       return Response.json({ error: 'Missing client email or access key' }, { status: 400 });
     }
@@ -532,11 +540,11 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/client/change-password ---
   if (path === '/api/client/change-password' && method === 'POST') {
-    const body = await request.json<{
+    const body = await parseJson<{
       profileId?: string;
       currentPassword?: string;
       newPassword?: string;
-    }>().catch(() => ({}));
+    }>(request);
 
     if (!body.profileId || !body.currentPassword || !body.newPassword) {
       return Response.json({ error: 'Missing required password fields.' }, { status: 400 });
@@ -572,7 +580,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/client/forgot-password ---
   if (path === '/api/client/forgot-password' && method === 'POST') {
-    const body = await request.json<{ email?: string }>().catch(() => ({}));
+    const body = await parseJson<{ email?: string }>(request);
     if (!body.email) {
       return Response.json({ error: 'Email address is required.' }, { status: 400 });
     }
@@ -610,7 +618,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/client/reset-password ---
   if (path === '/api/client/reset-password' && method === 'POST') {
-    const body = await request.json<{ token?: string; newPassword?: string }>().catch(() => ({}));
+    const body = await parseJson<{ token?: string; newPassword?: string }>(request);
     if (!body.token || !body.newPassword) {
       return Response.json({ error: 'Missing reset token or new password.' }, { status: 400 });
     }
@@ -690,7 +698,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
   // --- PATCH /api/client/appointments/:id/status ---
   if (path.startsWith('/api/client/appointments/') && path.endsWith('/status') && method === 'PATCH') {
     const id = path.replace('/api/client/appointments/', '').replace('/status', '').trim();
-    const body = await request.json<{ status?: string }>().catch(() => ({}));
+    const body = await parseJson<{ status?: string }>(request);
     const status = body.status;
     const validStatuses = ['pending', 'confirmed', 'declined', 'cancelled', 'completed'];
 
@@ -725,7 +733,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/appointments (Create booking + Async Resend email dispatch) ---
   if (path === '/api/appointments' && method === 'POST') {
-    const body = await request.json<{
+    const body = await parseJson<{
       profileId?: string;
       serviceId?: string;
       clientName?: string;
@@ -734,7 +742,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       appointmentDate?: string;
       appointmentTime?: string;
       notes?: string;
-    }>().catch(() => ({}));
+    }>(request);
 
     if (
       !body.profileId ||
@@ -872,7 +880,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- PUT /api/client/profile (Update practitioner profile in D1) ---
   if (path === '/api/client/profile' && method === 'PUT') {
-    const body = await request.json<{
+    const body = await parseJson<{
       id?: string;
       name?: string;
       title?: string;
@@ -903,7 +911,7 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       services?: Array<{ id?: string; name?: string; title?: string; description?: string; durationMinutes?: number; price?: number; category?: string; tags?: string[]; isActive?: boolean }>;
       availability?: Array<{ id?: string; day?: string; dayOfWeek?: string; enabled: boolean; startTime?: string; endTime?: string; slotDurationMinutes?: number }>;
       emergencyNotice?: string | null;
-    }>().catch(() => ({}));
+    }>(request);
 
     if (!body.id) {
       return Response.json({ error: 'Missing profile ID in update body.' }, { status: 400 });
@@ -1033,11 +1041,11 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/upload (Tigris S3-compatible storage) ---
   if (path === '/api/upload' && method === 'POST') {
-    const body = await request.json<{
+    const body = await parseJson<{
       imageBase64?: string;
       filename?: string;
       mimeType?: string;
-    }>().catch(() => ({}));
+    }>(request);
 
     if (!body.imageBase64) {
       return Response.json({ error: 'Missing imageBase64 payload.' }, { status: 400 });
@@ -1142,13 +1150,13 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
   // --- POST /api/billing/paypal/create-order ---
   if (path === '/api/billing/paypal/create-order' && method === 'POST') {
-    const body = await request.json<{
+    const body = await parseJson<{
       planId?: string;
       billingCycle?: 'yearly' | 'half_yearly';
       amountUsd?: number;
       hasOwnDomain?: boolean;
       hasOwnHosting?: boolean;
-    }>().catch(() => ({}));
+    }>(request);
 
     const amountUsd = Math.max(1, Number(body.amountUsd || 20));
     const description = `Profilease ${body.planId || 'headless'} (${body.billingCycle || 'yearly'})`;
@@ -1299,7 +1307,7 @@ async function signS3Request(opts: {
   const dateStamp = amzDate.slice(0, 8);
 
   // Payload hash
-  const payloadBytes = body ?? new Uint8Array(0);
+  const payloadBytes = body ? new Uint8Array(body) : new Uint8Array(0);
   const payloadHashBuf = await crypto.subtle.digest('SHA-256', payloadBytes);
   const payloadHash = Array.from(new Uint8Array(payloadHashBuf))
     .map((b) => b.toString(16).padStart(2, '0'))
