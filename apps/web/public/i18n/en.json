@@ -1,0 +1,110 @@
+{
+  "nav": {
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "pricing": "Pricing",
+    "testimonials": "Testimonials",
+    "portal": "Portal",
+    "appointments": "Appointments",
+    "services": "Services & Pricing",
+    "timings": "Timings & Availability",
+    "profile": "Profile Details",
+    "appearance": "Appearance",
+    "plan": "Plan",
+    "livePortfolio": "Live Portfolio",
+    "logout": "Logout"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Portfolio & Practice Booking Engine",
+      "headline": "Your Practice. Your Domain. Booked Automatically.",
+      "subtext": "Launch a sharp, high-converting portfolio on your own custom domain with real-time slot scheduling, automatic local currency display, and instant Email & WhatsApp booking alerts.",
+      "ctaPrimary": "Practitioner Portal",
+      "ctaSecondary": "Read Stories"
+    },
+    "features": {
+      "eyebrow": "Why Profilease",
+      "title": "Designed for Trust & Conversion"
+    },
+    "workflow": {
+      "eyebrow": "Simple Onboarding",
+      "title": "Live in Three Steps"
+    },
+    "pricing": {
+      "eyebrow": "Transparent Pricing",
+      "title": "Simple Plans in Your Local Currency"
+    },
+    "testimonials": {
+      "eyebrow": "Testimonials",
+      "title": "Trusted by Independent Practitioners"
+    },
+    "footer": {
+      "portal": "Practitioner Portal",
+      "admin": "Admin"
+    }
+  },
+  "portal": {
+    "subscription": "Subscription & Billing",
+    "changePlan": "Change or Upgrade Your Plan",
+    "activePlan": "Active Subscription",
+    "currentPlan": "Current Plan",
+    "recommended": "Recommended",
+    "activePlanBtn": "Active Plan",
+    "switchTo": "Switch to",
+    "yearly": "Yearly",
+    "sixMonths": "6 Months",
+    "perYear": "year",
+    "per6Months": "6 mos",
+    "customizeAppearance": "Customize Appearance",
+    "serviceLimit": "Service Limit",
+    "services": "services",
+    "customDomain": "Custom Domain Add-on",
+    "enabled": "Enabled",
+    "notActive": "Not Active"
+  },
+  "booking": {
+    "title": "Book an Appointment",
+    "selectService": "Select a Service",
+    "chooseDate": "Choose a Date",
+    "chooseTime": "Choose a Time",
+    "yourDetails": "Your Details",
+    "name": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone / WhatsApp",
+    "notes": "Notes (optional)",
+    "confirm": "Confirm Booking",
+    "booking": "Booking...",
+    "success": "Appointment Requested!",
+    "successMsg": "You'll receive a confirmation shortly. The practitioner will get in touch to finalize.",
+    "close": "Close"
+  },
+  "profile": {
+    "about": "About",
+    "services": "Services & Pricing",
+    "facilities": "Facilities",
+    "bookNow": "Book Now",
+    "viewAll": "View All",
+    "from": "from",
+    "duration": "min",
+    "online": "Online",
+    "homeVisit": "Home Visit",
+    "clinicVisit": "Clinic Visit"
+  },
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "and": "and",
+    "language": "Language"
+  }
+}

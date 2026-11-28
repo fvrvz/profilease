@@ -13,6 +13,7 @@ billingRoutes.post('/paypal/create-order', async (c) => {
     planId?: string;
     billingCycle?: 'yearly' | 'half_yearly';
     amountUsd?: number;
+    cancelPath?: string;
   }>(c.req.raw);
 
   const result = await createPayPalCheckoutOrder({
@@ -21,6 +22,7 @@ billingRoutes.post('/paypal/create-order', async (c) => {
     planId: body.planId,
     billingCycle: body.billingCycle,
     amountUsd: Number(body.amountUsd || 20),
+    cancelPath: body.cancelPath,
   });
 
   return c.json(result);

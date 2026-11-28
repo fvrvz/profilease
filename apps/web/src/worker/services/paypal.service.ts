@@ -25,6 +25,8 @@ export async function createPayPalCheckoutOrder(params: {
   planId?: string;
   billingCycle?: 'yearly' | 'half_yearly';
   amountUsd: number;
+  /** Path to redirect to when user cancels PayPal checkout (e.g. '/portal/plan'). Defaults to '/#pricing'. */
+  cancelPath?: string;
 }): Promise<{ orderId: string; approveUrl: string; fallback?: boolean }> {
   const amountUsd = Math.max(1, Number(params.amountUsd || 20));
   const normalizedPlan = params.planId === 'mid' || params.planId === 'pro' ? params.planId : 'basic';
@@ -48,7 +50,7 @@ export async function createPayPalCheckoutOrder(params: {
           ],
           applicationContext: {
             returnUrl: `${params.origin}/billing/paypal/return?plan=${normalizedPlan}`,
-            cancelUrl: `${params.origin}/#pricing`,
+            cancelUrl: `${params.origin}${params.cancelPath || '/#pricing'}`,
           },
         },
       });

@@ -36,42 +36,42 @@
               [routerLinkActiveOptions]="{ exact: true }"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Appointments
+              {{ 'nav.appointments' | transloco }}
             </a>
             <a
               routerLink="/portal/services"
               routerLinkActive="bg-white text-neutral-900"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Services & Pricing
+              {{ 'nav.services' | transloco }}
             </a>
             <a
               routerLink="/portal/availability"
               routerLinkActive="bg-white text-neutral-900"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Timings & Availability
+              {{ 'nav.timings' | transloco }}
             </a>
             <a
               routerLink="/portal/profile"
               routerLinkActive="bg-white text-neutral-900"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Profile Details
+              {{ 'nav.profile' | transloco }}
             </a>
             <a
               routerLink="/portal/appearance"
               routerLinkActive="bg-white text-neutral-900"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Appearance
+              {{ 'nav.appearance' | transloco }}
             </a>
             <a
               routerLink="/portal/plan"
               routerLinkActive="bg-white text-neutral-900"
               class="px-3.5 py-2 hover:bg-neutral-800 text-neutral-300 transition-colors"
             >
-              Plan
+              {{ 'nav.plan' | transloco }}
             </a>
           </nav>
 
@@ -83,16 +83,18 @@
                 target="_blank"
                 class="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 bg-neutral-800 hover:bg-white hover:text-neutral-900 text-neutral-200 text-xs font-mono font-bold uppercase transition-colors border border-neutral-700"
               >
-                <span>Live Portfolio &rarr;</span>
+                <span>{{ 'nav.livePortfolio' | transloco }} &rarr;</span>
               </a>
             }
+
+            <app-lang-switcher />
 
             <button
               type="button"
               (click)="logout()"
               class="px-3 py-1.5 bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-300 text-xs font-mono font-bold uppercase transition-colors cursor-pointer border border-neutral-700 shrink-0"
             >
-              Logout
+              {{ 'nav.logout' | transloco }}
             </button>
           </div>
         </div>
@@ -105,42 +107,42 @@
             [routerLinkActiveOptions]="{ exact: true }"
             class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
           >
-            Appointments
+            {{ 'nav.appointments' | transloco }}
           </a>
           <a
             routerLink="/portal/services"
             routerLinkActive="bg-white text-neutral-900"
             class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
           >
-            Services
+            {{ 'nav.services' | transloco }}
           </a>
           <a
             routerLink="/portal/availability"
             routerLinkActive="bg-white text-neutral-900"
             class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
           >
-            Timings
+            {{ 'nav.timings' | transloco }}
           </a>
           <a
             routerLink="/portal/profile"
             routerLinkActive="bg-white text-neutral-900"
             class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
           >
-            Profile
+            {{ 'nav.profile' | transloco }}
           </a>
           <a
             routerLink="/portal/appearance"
             routerLinkActive="bg-white text-neutral-900"
             class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
           >
-            Appearance
+            {{ 'nav.appearance' | transloco }}
           </a>
           <a
             routerLink="/portal/plan"
             routerLinkActive="bg-white text-neutral-900"
             class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
           >
-            Plan
+            {{ 'nav.plan' | transloco }}
           </a>
           @if (authService.currentProfile()?.slug; as slug) {
             <a
@@ -148,7 +150,7 @@
               target="_blank"
               class="px-3 py-1.5 text-emerald-400 border border-emerald-700 shrink-0"
             >
-              Live &rarr;
+              {{ 'nav.livePortfolio' | transloco }} &rarr;
             </a>
           }
         </nav>

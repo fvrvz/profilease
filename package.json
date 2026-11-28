@@ -68,6 +68,7 @@
     "@angular/platform-server": "~22.2.0",
     "@angular/router": "~22.2.0",
     "@angular/ssr": "~22.2.0",
+    "@jsverse/transloco": "^8.4.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/microservices": "^11.2.11",

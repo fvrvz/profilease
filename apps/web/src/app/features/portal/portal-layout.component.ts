@@ -1,10 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ClientAuthService } from '@service/client-auth.service';
+import { LangSwitcherComponent } from '@shared/components/lang-switcher.component';
 
 @Component({
   selector: 'app-portal-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoPipe, LangSwitcherComponent],
   templateUrl: './portal-layout.component.html',
 })
 export class PortalLayoutComponent {

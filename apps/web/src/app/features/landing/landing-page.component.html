@@ -10,28 +10,29 @@
       </a>
 
       <nav class="hidden md:flex items-center gap-6 text-xs font-mono font-bold uppercase tracking-wider text-neutral-300">
-        <a href="#features" class="hover:text-white transition-colors">Features</a>
-        <a href="#workflow" class="hover:text-white transition-colors">How It Works</a>
-        <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
-        <a href="#testimonials" class="hover:text-white transition-colors">Testimonials</a>
+        <a href="#features" class="hover:text-white transition-colors">{{ 'nav.features' | transloco }}</a>
+        <a href="#workflow" class="hover:text-white transition-colors">{{ 'nav.howItWorks' | transloco }}</a>
+        <a href="#pricing" class="hover:text-white transition-colors">{{ 'nav.pricing' | transloco }}</a>
+        <a href="#testimonials" class="hover:text-white transition-colors">{{ 'nav.testimonials' | transloco }}</a>
       </nav>
 
       <div class="flex items-center gap-2 shrink-0">
+        <app-lang-switcher />
         <a
           routerLink="/portal"
           class="px-3 sm:px-4 py-2 bg-white text-neutral-900 hover:bg-neutral-200 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider border border-white transition-colors whitespace-nowrap"
         >
-          Portal &rarr;
+          {{ 'nav.portal' | transloco }} &rarr;
         </a>
       </div>
     </div>
 
     <!-- Mobile / Tablet Scrollable Nav -->
     <nav class="md:hidden border-t border-neutral-800 bg-neutral-950 px-3 py-2 flex items-center gap-3 overflow-x-auto whitespace-nowrap text-[11px] font-mono font-bold uppercase tracking-wider text-neutral-300">
-      <a href="#features" class="hover:text-white shrink-0">Features</a>
-      <a href="#workflow" class="hover:text-white shrink-0">How It Works</a>
-      <a href="#pricing" class="hover:text-white shrink-0">Pricing</a>
-      <a href="#testimonials" class="hover:text-white shrink-0">Testimonials</a>
+      <a href="#features" class="hover:text-white shrink-0">{{ 'nav.features' | transloco }}</a>
+      <a href="#workflow" class="hover:text-white shrink-0">{{ 'nav.howItWorks' | transloco }}</a>
+      <a href="#pricing" class="hover:text-white shrink-0">{{ 'nav.pricing' | transloco }}</a>
+      <a href="#testimonials" class="hover:text-white shrink-0">{{ 'nav.testimonials' | transloco }}</a>
     </nav>
   </header>
 
@@ -43,16 +44,16 @@
           <div class="flex items-center gap-2 mb-4">
             <span class="inline-block w-2.5 h-2.5 bg-emerald-600"></span>
             <span class="text-xs font-mono font-bold uppercase tracking-widest text-neutral-500">
-              Portfolio &amp; Practice Booking Engine
+              {{ 'landing.hero.badge' | transloco }}
             </span>
           </div>
 
           <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-neutral-900 leading-[1.05] mb-5 break-words">
-            Your Practice. Your Domain. Booked Automatically.
+            {{ 'landing.hero.headline' | transloco }}
           </h1>
 
           <p class="text-sm sm:text-base text-neutral-700 max-w-xl leading-relaxed mb-8">
-            Launch a sharp, high-converting portfolio on your own custom domain with real-time slot scheduling, automatic local currency display, and instant Email &amp; WhatsApp booking alerts.
+            {{ 'landing.hero.subtext' | transloco }}
           </p>
         </div>
 
@@ -62,13 +63,13 @@
             class="w-full sm:w-auto justify-center px-6 py-3.5 bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-neutral-800 transition-all flex items-center gap-2"
           >
             <app-sharp-icon name="user" customClass="w-3.5 h-3.5" />
-            <span>Practitioner Portal</span>
+            <span>{{ 'landing.hero.ctaPrimary' | transloco }}</span>
           </a>
           <a
             href="#testimonials"
             class="w-full sm:w-auto text-center px-6 py-3.5 bg-white text-neutral-900 text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 hover:bg-neutral-100 transition-all"
           >
-            Read Stories &darr;
+            {{ 'landing.hero.ctaSecondary' | transloco }} &darr;
           </a>
         </div>
       </div>
@@ -120,9 +121,9 @@
   <!-- CORE CAPABILITIES -->
   <section id="features" class="max-w-6xl w-full mx-auto px-4 sm:px-6 pb-16">
     <div class="border-b-2 border-neutral-900 pb-3 mb-8">
-      <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Why Profilease</span>
+      <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">{{ 'landing.features.eyebrow' | transloco }}</span>
       <h2 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-neutral-900">
-        Designed for Trust &amp; Conversion
+        {{ 'landing.features.title' | transloco }}
       </h2>
     </div>
 
@@ -173,9 +174,9 @@
   <section id="workflow" class="max-w-6xl w-full mx-auto px-4 sm:px-6 pb-16">
     <div class="bg-white border-2 border-neutral-900 p-6 sm:p-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
       <div class="border-b-2 border-neutral-900 pb-3 mb-6">
-        <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Simple Onboarding</span>
+        <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">{{ 'landing.workflow.eyebrow' | transloco }}</span>
         <h2 class="text-2xl font-black uppercase tracking-tight text-neutral-900">
-          Live in Three Steps
+          {{ 'landing.workflow.title' | transloco }}
         </h2>
       </div>
 
@@ -211,9 +212,9 @@
   <section id="pricing" class="max-w-6xl w-full mx-auto px-4 sm:px-6 pb-16">
     <div class="border-b-2 border-neutral-900 pb-4 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Transparent Pricing</span>
+        <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">{{ 'landing.pricing.eyebrow' | transloco }}</span>
         <h2 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-neutral-900">
-          Simple Plans in Your Local Currency
+          {{ 'landing.pricing.title' | transloco }}
         </h2>
       </div>
 
@@ -429,9 +430,9 @@
   <section id="testimonials" class="max-w-6xl w-full mx-auto px-4 sm:px-6 pb-20">
     <div class="border-b-2 border-neutral-900 pb-3 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
       <div>
-        <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Testimonials</span>
+        <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">{{ 'landing.testimonials.eyebrow' | transloco }}</span>
         <h2 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-neutral-900">
-          Trusted by Independent Practitioners
+          {{ 'landing.testimonials.title' | transloco }}
         </h2>
       </div>
       <span class="text-xs font-mono text-neutral-600 font-bold">
