@@ -3,20 +3,31 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-neutral-900 pb-4">
         <div>
           <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">Offerings & Pricing</span>
-          <h1 class="text-2xl font-black uppercase tracking-tight text-neutral-900">
-            Services & Consultation Catalog
-          </h1>
+          <div class="flex flex-wrap items-center gap-3">
+            <h1 class="text-2xl font-black uppercase tracking-tight text-neutral-900">
+              Services & Consultation Catalog
+            </h1>
+            <span class="px-2 py-0.5 bg-neutral-100 border border-neutral-300 text-[11px] font-mono font-bold text-neutral-700">
+              {{ currentProfile()?.services?.length || 0 }} / {{ serviceLimit() }} Services
+            </span>
+          </div>
         </div>
 
         <button
           type="button"
-          (click)="showAddForm.set(!showAddForm())"
+          (click)="toggleAddForm()"
           class="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 cursor-pointer self-start sm:self-auto"
         >
           <app-sharp-icon [name]="showAddForm() ? 'x' : 'plus'" customClass="w-3.5 h-3.5" />
           <span>{{ showAddForm() ? 'Cancel' : '+ Add New Service' }}</span>
         </button>
       </div>
+
+      @if (serviceError()) {
+        <div class="p-3 bg-red-50 border-2 border-red-800 text-red-900 text-xs font-mono font-bold">
+          {{ serviceError() }}
+        </div>
+      }
 
       <!-- Add New Service Signal Form -->
       @if (showAddForm()) {

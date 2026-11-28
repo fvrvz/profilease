@@ -14,6 +14,7 @@ import {
 } from '@profilease/types';
 import { ProfileService } from '@service/profile.service';
 import { CurrencyService } from '@service/currency.service';
+import { TenantContextService } from '@service/tenant-context.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 import { SharpImageUploaderComponent } from '@shared/components/sharp-image-uploader.component';
@@ -34,6 +35,7 @@ import { SharpSelectComponent, SharpSelectOption } from '@shared/components/shar
 export class AdminOnboardComponent {
   protected readonly profileService = inject(ProfileService);
   protected readonly currencyService = inject(CurrencyService);
+  protected readonly tenantContext = inject(TenantContextService);
   private readonly router = inject(Router);
 
   readonly currentStep = signal<number>(1);

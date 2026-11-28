@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { ServiceMode, SocialLink, SocialPlatform, Testimonial } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
+import { TenantContextService } from '@service/tenant-context.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 import { SharpImageUploaderComponent } from '@shared/components/sharp-image-uploader.component';
@@ -21,6 +22,7 @@ import { SharpSelectComponent, SharpSelectOption } from '@shared/components/shar
 })
 export class PortalProfileComponent implements OnInit {
   private readonly clientAuth = inject(ClientAuthService);
+  protected readonly tenantContext = inject(TenantContextService);
 
   readonly currentProfile = this.clientAuth.currentProfile;
   readonly saveSuccess = signal<boolean>(false);

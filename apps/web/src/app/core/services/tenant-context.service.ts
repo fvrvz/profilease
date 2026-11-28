@@ -26,6 +26,14 @@ export class TenantContextService {
     return 'https://profilease.byfaraaz.com';
   }
 
+  platformHost(): string {
+    try {
+      return new URL(this.platformUrl()).host;
+    } catch {
+      return 'profilease.byfaraaz.com';
+    }
+  }
+
   isCustomDomain(): boolean {
     const host = this.hostname();
     if (!host) {
