@@ -1,3 +1,9 @@
+import {
+  CheckoutPaymentIntent,
+  Client,
+  Environment,
+  OrdersController,
+} from '@paypal/paypal-server-sdk';
 import type { Env } from '../types';
 
 export async function createPayPalCheckoutOrder(params: {
@@ -11,58 +17,42 @@ export async function createPayPalCheckoutOrder(params: {
   const description = `Profilease ${params.planId || 'basic'} (${params.billingCycle || 'yearly'})`;
 
   if (params.env.PAYPAL_CLIENT_ID && params.env.PAYPAL_CLIENT_SECRET) {
-    const apiBase =
-      params.env.PAYPAL_ENV === 'live'
-        ? 'https://api-m.paypal.com'
-        : 'https://api-m.sandbox.paypal.com';
-    const authHeader = btoa(`${params.env.PAYPAL_CLIENT_ID}:${params.env.PAYPAL_CLIENT_SECRET}`);
+    try {
+      const client = new Client({
+        clientCredentialsAuthCredentials: {
+          oAuthClientId: params.env.PAYPAL_CLIENT_ID,
+          oAuthClientSecret: params.env.PAYPAL_CLIENT_SECRET,
+        },
+        environment:
+          params.env.PAYPAL_ENV === 'live' ? Environment.Production : Environment.Sandbox,
+      });
 
-    const tokenRes = await fetch(`${apiBase}/v1/oauth2/token`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${authHeader}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'grant_type=client_credentials',
-    });
-
-    if (tokenRes.ok) {
-      const tokenData = (await tokenRes.json()) as { access_token?: string };
-      if (tokenData.access_token) {
-        const orderRes = await fetch(`${apiBase}/v2/checkout/orders`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${tokenData.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            intent: 'CAPTURE',
-            purchase_units: [
-              {
-                description,
-                amount: {
-                  currency_code: 'USD',
-                  value: amountUsd.toFixed(2),
-                },
+      const ordersController = new OrdersController(client);
+      const { result } = await ordersController.createOrder({
+        body: {
+          intent: CheckoutPaymentIntent.Capture,
+          purchaseUnits: [
+            {
+              description,
+              amount: {
+                currencyCode: 'USD',
+                value: amountUsd.toFixed(2),
               },
-            ],
-            application_context: {
-              return_url: `${params.origin}/portal/login`,
-              cancel_url: `${params.origin}/#pricing`,
             },
-          }),
-        });
-        if (orderRes.ok) {
-          const orderData = (await orderRes.json()) as {
-            id?: string;
-            links?: Array<{ rel: string; href: string }>;
-          };
-          const approveUrl = orderData.links?.find((l) => l.rel === 'approve')?.href;
-          if (approveUrl && orderData.id) {
-            return { orderId: orderData.id, approveUrl };
-          }
-        }
+          ],
+          applicationContext: {
+            returnUrl: `${params.origin}/portal/login`,
+            cancelUrl: `${params.origin}/#pricing`,
+          },
+        },
+      });
+
+      const approveUrl = result.links?.find((l) => l.rel === 'approve')?.href;
+      if (approveUrl && result.id) {
+        return { orderId: result.id, approveUrl };
       }
+    } catch (err) {
+      console.error('PayPal SDK createOrder error:', err);
     }
   }
 

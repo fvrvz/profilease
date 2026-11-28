@@ -19,6 +19,8 @@
   ],
   "vars": {
     "NODE_ENV": "production",
+    "PLATFORM_HOSTS": "profilease.byfaraaz.com,www.profilease.byfaraaz.com,profilease.io,www.profilease.io",
+    "PLATFORM_URL": "https://profilease.byfaraaz.com",
     "RESEND_FROM_EMAIL": "onboarding@resend.dev",
     "TIGRIS_ENDPOINT": "https://t3.storage.dev",
     "TIGRIS_BUCKET": "profilease-media",

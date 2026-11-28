@@ -10,6 +10,8 @@ export interface Env {
   PAYPAL_CLIENT_SECRET?: string;
   PAYPAL_ENV?: string;
   NODE_ENV?: string;
+  PLATFORM_HOSTS?: string;
+  PLATFORM_URL?: string;
   ADMIN_EMAIL?: string;
   ADMIN_PASSWORD?: string;
   TIGRIS_ACCESS_KEY_ID?: string;
