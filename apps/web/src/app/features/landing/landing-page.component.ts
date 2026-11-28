@@ -1,9 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencyService } from '@service/currency.service';
 import { SharpBadgeComponent } from '@shared/components/sharp-badge.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
+import { LangSwitcherComponent } from '@shared/components/lang-switcher.component';
 
 interface TestimonialItem {
   readonly quote: string;
@@ -15,7 +17,7 @@ interface TestimonialItem {
 
 @Component({
   selector: 'app-landing-page',
-  imports: [RouterLink, SharpBadgeComponent, SharpIconComponent],
+  imports: [RouterLink, SharpBadgeComponent, SharpIconComponent, TranslocoPipe, LangSwitcherComponent],
   templateUrl: './landing-page.component.html',
 })
 export class LandingPageComponent {

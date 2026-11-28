@@ -2,6 +2,7 @@ import { Component, computed, inject, PLATFORM_ID, signal } from '@angular/core'
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { PLAN_CAPABILITIES, SubscriptionPlan, getPlanCapabilities } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
 import { ToastService } from '@service/toast.service';
@@ -17,17 +18,17 @@ interface PlanCard {
 @Component({
   selector: 'app-portal-plan',
   standalone: true,
-  imports: [RouterLink, SharpButtonComponent],
+  imports: [RouterLink, SharpButtonComponent, TranslocoPipe],
   template: `
     <div class="space-y-8 font-sans">
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-neutral-900 pb-4">
         <div>
           <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">
-            Subscription &amp; Billing
+            {{ 'portal.subscription' | transloco }}
           </span>
           <h1 class="text-2xl font-black uppercase tracking-tight text-neutral-900">
-            Change or Upgrade Your Plan
+            {{ 'portal.changePlan' | transloco }}
           </h1>
         </div>
 
@@ -39,7 +40,7 @@ interface PlanCard {
             [class.bg-neutral-900]="billingCycle() === 'yearly'"
             [class.text-white]="billingCycle() === 'yearly'"
           >
-            Yearly
+            {{ 'portal.yearly' | transloco }}
           </button>
           <button
             type="button"
@@ -48,7 +49,7 @@ interface PlanCard {
             [class.bg-neutral-900]="billingCycle() === 'half_yearly'"
             [class.text-white]="billingCycle() === 'half_yearly'"
           >
-            6 Months
+            {{ 'portal.sixMonths' | transloco }}
           </button>
         </div>
       </div>
@@ -57,7 +58,7 @@ interface PlanCard {
       <div class="bg-white border-2 border-neutral-900 p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span class="text-[11px] font-mono font-bold uppercase tracking-widest text-neutral-500 block">
-            Active Subscription
+            {{ 'portal.activePlan' | transloco }}
           </span>
           <div class="flex items-center gap-3 mt-1">
             <span class="text-xl font-black uppercase text-neutral-900">
@@ -68,15 +69,15 @@ interface PlanCard {
             </span>
           </div>
           <p class="text-xs font-mono text-neutral-600 mt-1">
-            Service Limit: {{ currentCapabilities().baseServiceLimit + (currentProfile()?.extraServiceSlots || 0) }} services
-            &bull; Custom Domain Add-on: {{ currentProfile()?.customDomainAddon ? 'Enabled' : 'Not Active' }}
+            {{ 'portal.serviceLimit' | transloco }}: {{ currentCapabilities().baseServiceLimit + (currentProfile()?.extraServiceSlots || 0) }} {{ 'portal.services' | transloco }}
+            &bull; {{ 'portal.customDomain' | transloco }}: {{ currentProfile()?.customDomainAddon ? ('portal.enabled' | transloco) : ('portal.notActive' | transloco) }}
           </p>
         </div>
         <a
           routerLink="/portal/appearance"
           class="px-4 py-2 bg-neutral-100 hover:bg-neutral-900 hover:text-white text-neutral-900 border-2 border-neutral-900 text-xs font-mono font-bold uppercase transition-colors self-start sm:self-auto"
         >
-          Customize Appearance &rarr;
+          {{ 'portal.customizeAppearance' | transloco }} &rarr;
         </a>
       </div>
 
@@ -220,6 +221,7 @@ export class PortalPlanComponent {
         planId,
         billingCycle: this.billingCycle(),
         amountUsd,
+        cancelPath: '/portal/plan',
       })
       .subscribe({
         next: (res) => {
