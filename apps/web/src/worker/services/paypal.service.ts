@@ -6,6 +6,19 @@ import {
 } from '@paypal/paypal-server-sdk';
 import type { Env } from '../types';
 
+function createPayPalClient(env: Env): Client | null {
+  if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
+    return null;
+  }
+  return new Client({
+    clientCredentialsAuthCredentials: {
+      oAuthClientId: env.PAYPAL_CLIENT_ID,
+      oAuthClientSecret: env.PAYPAL_CLIENT_SECRET,
+    },
+    environment: env.PAYPAL_ENV === 'live' ? Environment.Production : Environment.Sandbox,
+  });
+}
+
 export async function createPayPalCheckoutOrder(params: {
   env: Env;
   origin: string;
@@ -14,19 +27,12 @@ export async function createPayPalCheckoutOrder(params: {
   amountUsd: number;
 }): Promise<{ orderId: string; approveUrl: string; fallback?: boolean }> {
   const amountUsd = Math.max(1, Number(params.amountUsd || 20));
-  const description = `Profilease ${params.planId || 'basic'} (${params.billingCycle || 'yearly'})`;
+  const normalizedPlan = params.planId === 'mid' || params.planId === 'pro' ? params.planId : 'basic';
+  const description = `Profilease ${normalizedPlan} (${params.billingCycle || 'yearly'})`;
 
-  if (params.env.PAYPAL_CLIENT_ID && params.env.PAYPAL_CLIENT_SECRET) {
+  const client = createPayPalClient(params.env);
+  if (client) {
     try {
-      const client = new Client({
-        clientCredentialsAuthCredentials: {
-          oAuthClientId: params.env.PAYPAL_CLIENT_ID,
-          oAuthClientSecret: params.env.PAYPAL_CLIENT_SECRET,
-        },
-        environment:
-          params.env.PAYPAL_ENV === 'live' ? Environment.Production : Environment.Sandbox,
-      });
-
       const ordersController = new OrdersController(client);
       const { result } = await ordersController.createOrder({
         body: {
@@ -41,7 +47,7 @@ export async function createPayPalCheckoutOrder(params: {
             },
           ],
           applicationContext: {
-            returnUrl: `${params.origin}/portal/login`,
+            returnUrl: `${params.origin}/billing/paypal/return?plan=${normalizedPlan}`,
             cancelUrl: `${params.origin}/#pricing`,
           },
         },
@@ -60,5 +66,28 @@ export async function createPayPalCheckoutOrder(params: {
     orderId: `pp-fallback-${Date.now()}`,
     approveUrl: `https://www.paypal.com/paypalme/fvrvz/${amountUsd.toFixed(2)}`,
     fallback: true,
+  };
+}
+
+export async function capturePayPalOrder(params: {
+  env: Env;
+  orderId: string;
+}): Promise<{ captured: boolean; status: string; orderId: string }> {
+  const client = createPayPalClient(params.env);
+  if (!client) {
+    return { captured: false, status: 'PAYPAL_NOT_CONFIGURED', orderId: params.orderId };
+  }
+
+  const ordersController = new OrdersController(client);
+  const { result } = await ordersController.captureOrder({
+    id: params.orderId,
+    prefer: 'return=representation',
+  });
+
+  const status = result.status || 'UNKNOWN';
+  return {
+    captured: status === 'COMPLETED',
+    status,
+    orderId: result.id || params.orderId,
   };
 }

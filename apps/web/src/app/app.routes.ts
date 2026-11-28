@@ -105,6 +105,15 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'billing/paypal/return',
+    canActivate: [customDomainGuard],
+    title: 'Confirming PayPal Subscription — Profilease',
+    loadComponent: () =>
+      import('@features/billing/paypal-return.component').then(
+        (m) => m.PayPalReturnComponent
+      ),
+  },
+  {
     path: 'portal',
     canActivate: [customDomainGuard, clientGuard],
     loadComponent: () =>
