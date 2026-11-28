@@ -43,3 +43,149 @@ button {
 ::-webkit-scrollbar-thumb {
   background: #09090b;
 }
+
+/* Portfolio Theme Palettes */
+.portfolio-root {
+  --pf-accent: #09090b;
+  --pf-accent-fg: #ffffff;
+  --pf-bg: #fafafa;
+  --pf-surface: #ffffff;
+  --pf-text: #09090b;
+  --pf-muted: #52525b;
+  --pf-border: #18181b;
+  background-color: var(--pf-bg);
+  color: var(--pf-text);
+}
+
+.portfolio-root.accent-teal {
+  --pf-accent: #0f766e;
+  --pf-accent-fg: #ffffff;
+}
+
+.portfolio-root.accent-indigo {
+  --pf-accent: #4338ca;
+  --pf-accent-fg: #ffffff;
+}
+
+.portfolio-root.accent-amber {
+  --pf-accent: #b45309;
+  --pf-accent-fg: #ffffff;
+}
+
+.portfolio-root.accent-emerald {
+  --pf-accent: #047857;
+  --pf-accent-fg: #ffffff;
+}
+
+.portfolio-root.accent-crimson {
+  --pf-accent: #b91c1c;
+  --pf-accent-fg: #ffffff;
+}
+
+.portfolio-root.accent-neutral {
+  --pf-accent: #18181b;
+  --pf-accent-fg: #ffffff;
+}
+
+.portfolio-root .pf-accent-bg {
+  background-color: var(--pf-accent) !important;
+  color: var(--pf-accent-fg) !important;
+  border-color: var(--pf-accent) !important;
+}
+
+.portfolio-root .pf-accent-text {
+  color: var(--pf-accent) !important;
+}
+
+/* Dark Mode for Portfolio */
+.portfolio-root.portfolio-dark {
+  --pf-bg: #09090b;
+  --pf-surface: #18181b;
+  --pf-text: #f4f4f5;
+  --pf-muted: #a1a1aa;
+  --pf-border: #3f3f46;
+  background-color: var(--pf-bg) !important;
+  color: var(--pf-text) !important;
+}
+
+.portfolio-root.portfolio-dark header,
+.portfolio-root.portfolio-dark section.bg-white,
+.portfolio-root.portfolio-dark .bg-white {
+  background-color: var(--pf-surface) !important;
+  color: var(--pf-text) !important;
+  border-color: var(--pf-border) !important;
+}
+
+.portfolio-root.portfolio-dark .bg-neutral-50,
+.portfolio-root.portfolio-dark .bg-neutral-100 {
+  background-color: #27272a !important;
+  color: var(--pf-text) !important;
+}
+
+.portfolio-root.portfolio-dark .text-neutral-900,
+.portfolio-root.portfolio-dark .text-neutral-800,
+.portfolio-root.portfolio-dark .text-neutral-700 {
+  color: #f4f4f5 !important;
+}
+
+.portfolio-root.portfolio-dark .text-neutral-600,
+.portfolio-root.portfolio-dark .text-neutral-500 {
+  color: #a1a1aa !important;
+}
+
+.portfolio-root.portfolio-dark .border-neutral-900,
+.portfolio-root.portfolio-dark .border-neutral-300,
+.portfolio-root.portfolio-dark .border-neutral-200 {
+  border-color: var(--pf-border) !important;
+}
+
+/* Rounded Corners Toggle (All Plans) */
+.portfolio-root.corners-rounded section,
+.portfolio-root.corners-rounded .pf-card,
+.portfolio-root.corners-rounded button,
+.portfolio-root.corners-rounded a,
+.portfolio-root.corners-rounded input,
+.portfolio-root.corners-rounded select,
+.portfolio-root.corners-rounded textarea,
+.portfolio-root.corners-rounded img,
+.portfolio-root.corners-rounded span.border {
+  border-radius: 0.75rem !important;
+}
+
+/* Layout Variants (Mid & Pro) */
+@media (min-width: 1024px) {
+  .portfolio-root.layout-split-sidebar main {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .portfolio-root.layout-split-sidebar main > section:first-child {
+    grid-column: 1 / -1;
+  }
+  .portfolio-root.layout-split-sidebar main > #booking-section {
+    position: sticky;
+    top: 5.5rem;
+  }
+}
+
+.portfolio-root.layout-compact-grid main {
+  max-width: 72rem;
+  gap: 1.5rem;
+}
+
+/* View Modes (Mid: link-card; Pro: all) */
+.portfolio-root.view-link-card main {
+  max-width: 42rem !important;
+}
+.portfolio-root.view-link-card #about {
+  display: none;
+}
+
+.portfolio-root.view-editorial-magazine {
+  font-family: Georgia, Cambria, 'Times New Roman', serif;
+}
+.portfolio-root.view-editorial-magazine h1,
+.portfolio-root.view-editorial-magazine h2 {
+  letter-spacing: -0.02em;
+}

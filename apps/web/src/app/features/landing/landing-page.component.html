@@ -268,12 +268,12 @@
       </div>
     }
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Headless Setup Plan -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Basic Plan -->
       <div class="bg-white border-2 border-neutral-900 p-6 sm:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between gap-2 mb-3">
-            <span class="text-xs font-mono uppercase font-bold tracking-widest text-neutral-500">Headless Setup</span>
+            <span class="text-xs font-mono uppercase font-bold tracking-widest text-neutral-500">Basic Plan</span>
             <app-sharp-badge variant="teal">Starter</app-sharp-badge>
           </div>
           <div class="flex items-baseline gap-2 mb-3">
@@ -285,29 +285,24 @@
             </span>
           </div>
           <p class="text-xs text-neutral-600 mb-2 leading-relaxed">
-            We handle domain registration, hosting &amp; SSL on your behalf. Flat <strong>$20/yr</strong> base — usage-based add-ons (extra storage, bandwidth, emails) billed on top as you scale.
+            Flat <strong>$20/yr</strong> base. Optional custom domain add-on (minimal fee with own domain, or domain purchase + minimal fee). Extra service slots billed on top.
           </p>
-          <p class="text-[10px] font-mono text-neutral-400 mb-5">Bring your own domain / hosting? Discounts applied above.</p>
-          <ul class="space-y-2.5 text-xs font-mono text-neutral-800 mb-8">
+          <ul class="space-y-2.5 text-xs font-mono text-neutral-800 mb-8 mt-4">
             <li class="flex items-center gap-2">
               <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Headless portfolio &amp; booking engine</span>
+              <span>Theme color palettes + Sharp/Rounded corners</span>
             </li>
             <li class="flex items-center gap-2">
               <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Domain, hosting &amp; SSL managed for you</span>
+              <span>Light / Dark / System mode (visitor preference)</span>
             </li>
             <li class="flex items-center gap-2">
               <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Practitioner Portal + temp password onboarding</span>
+              <span>Up to 5 services &amp; 3 testimonials</span>
             </li>
             <li class="flex items-center gap-2">
               <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Email &amp; WhatsApp booking notifications</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Usage-based scaling (storage, bandwidth, emails)</span>
+              <span>Slug hosting + optional custom domain add-on</span>
             </li>
           </ul>
         </div>
@@ -319,6 +314,54 @@
           class="w-full py-3.5 bg-neutral-900 text-white text-xs font-mono font-bold uppercase tracking-wider border-2 border-neutral-900 hover:bg-neutral-800 cursor-pointer disabled:opacity-50"
         >
           {{ checkoutLoadingPlan() === 'headless' ? 'Connecting to PayPal...' : 'Subscribe with PayPal →' }}
+        </button>
+      </div>
+
+      <!-- Mid / Growth Plan -->
+      <div class="bg-white border-2 border-neutral-900 p-6 sm:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <span class="text-xs font-mono uppercase font-bold tracking-widest text-neutral-500">Mid / Growth</span>
+            <app-sharp-badge variant="indigo">Popular</app-sharp-badge>
+          </div>
+          <div class="flex items-baseline gap-2 mb-3">
+            <span class="text-3xl sm:text-4xl font-black text-neutral-900 font-mono">
+              {{ currencyService.formatPrice(midPriceUsd(), 'USD') }}
+            </span>
+            <span class="text-xs font-mono text-neutral-500 uppercase">
+              / {{ billingCycle() === 'yearly' ? 'year' : '6 months' }}
+            </span>
+          </div>
+          <p class="text-xs text-neutral-600 mb-4 leading-relaxed">
+            Unlock layout switching, Link-Card bio view, Google Reviews integration, custom domain, and WhatsApp alerts.
+          </p>
+          <ul class="space-y-2.5 text-xs font-mono text-neutral-800 mb-8">
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>3 Layout Variants + 2 Portfolio Views</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Up to 15 services &amp; unlimited testimonials</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Verified Google Reviews link integration</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <app-sharp-icon name="check" customClass="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Custom domain + Email &amp; WhatsApp alerts</span>
+            </li>
+          </ul>
+        </div>
+
+        <button
+          type="button"
+          (click)="subscribeWithPayPal('mid')"
+          [disabled]="checkoutLoadingPlan() === 'mid'"
+          class="w-full py-3.5 bg-neutral-900 text-white text-xs font-mono font-bold uppercase tracking-wider border-2 border-neutral-900 hover:bg-neutral-800 cursor-pointer disabled:opacity-50"
+        >
+          {{ checkoutLoadingPlan() === 'mid' ? 'Connecting to PayPal...' : 'Subscribe with PayPal →' }}
         </button>
       </div>
 

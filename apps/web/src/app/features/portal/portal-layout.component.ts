@@ -16,6 +16,13 @@ export class PortalLayoutComponent {
   readonly passwordError = signal<string | null>(null);
   readonly isUpdatingPassword = signal<boolean>(false);
 
+  onFieldInput(field: 'curr' | 'new' | 'conf', event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    if (field === 'curr') this.currentPassword.set(val);
+    else if (field === 'new') this.newPassword.set(val);
+    else this.confirmPassword.set(val);
+  }
+
   onChangePassword(event: Event): void {
     event.preventDefault();
     this.passwordError.set(null);

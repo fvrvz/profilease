@@ -2,8 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { form, FormField, required, email } from '@angular/forms/signals';
 import {
+  BorderStyle,
   CreateProfileDto,
   ServiceMode,
+  SubscriptionPlan,
   ThemeVariant,
   ServiceItem,
   DayAvailability,
@@ -84,6 +86,15 @@ export class AdminOnboardComponent {
     { value: 'hybrid', label: 'Hybrid (Clinic + Home / Online)', sublabel: 'Multiple consultation modes available', icon: 'star' },
   ];
   readonly selectedServiceMode = signal<string>('clinic');
+  readonly selectedPlan = signal<SubscriptionPlan>('basic');
+  readonly selectedBorderStyle = signal<BorderStyle>('sharp');
+  readonly customDomainAddon = signal<boolean>(false);
+
+  setPlan(plan: string): void {
+    if (plan === 'basic' || plan === 'mid' || plan === 'pro') {
+      this.selectedPlan.set(plan);
+    }
+  }
 
   readonly availabilitySchedule = signal<DayAvailability[]>([
     { day: 'Monday', enabled: true, startTime: '09:00', endTime: '17:00', slotDurationMinutes: 30 },
@@ -270,6 +281,9 @@ export class AdminOnboardComponent {
       phone: idVal.phone,
       emergencyNotice: bioVal.emergencyNotice || undefined,
       theme: this.selectedTheme(),
+      subscriptionPlan: this.selectedPlan(),
+      borderStyle: this.selectedBorderStyle(),
+      customDomainAddon: this.customDomainAddon(),
       services: this.servicesList(),
       availability: this.availabilitySchedule(),
       testimonials: [],

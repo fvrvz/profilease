@@ -21,7 +21,7 @@
         </div>
       </div>
     } @else if (profile()) {
-      <div class="min-h-screen bg-neutral-50 text-neutral-900 flex flex-col" [class]="themeClass()">
+      <div class="min-h-screen flex flex-col" [class]="themeClass()" [style]="customThemeStyle()">
         <!-- Emergency Notice for Medical / Urgent Profiles -->
         @if (profile()?.emergencyNotice) {
           <div class="bg-red-600 text-white px-4 py-2 text-xs font-mono font-medium flex items-center justify-center gap-2 border-b border-red-700">
@@ -61,11 +61,25 @@
               <a href="javascript:void(0)" (click)="scrollToSection($event, 'contact')" class="hover:underline cursor-pointer">Location</a>
             </nav>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                (click)="cycleColorPreference()"
+                title="Switch Light / Dark / System theme"
+                class="px-2.5 py-2 border border-neutral-300 text-[10px] font-mono font-bold uppercase tracking-wider hover:border-neutral-900 transition-colors cursor-pointer"
+              >
+                @if (colorPreference() === 'light') {
+                  ☀ Light
+                } @else if (colorPreference() === 'dark') {
+                  ☾ Dark
+                } @else {
+                  ⚙ System
+                }
+              </button>
               <button
                 type="button"
                 (click)="scrollToSection($event, 'booking-section')"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider border border-neutral-900 hover:bg-neutral-800 transition-colors cursor-pointer"
+                class="pf-accent-bg inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider border hover:opacity-90 transition-opacity cursor-pointer"
               >
                 <app-sharp-icon name="calendar" customClass="w-3.5 h-3.5" />
                 <span>Book Slot</span>
@@ -127,7 +141,7 @@
                   <button
                     type="button"
                     (click)="scrollToSection($event, 'booking-section')"
-                    class="px-6 py-3 bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider border-2 border-neutral-900 hover:bg-neutral-800 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+                    class="pf-accent-bg px-6 py-3 text-xs font-bold uppercase tracking-wider border-2 hover:opacity-90 transition-opacity shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
                   >
                     Schedule Consultation Now →
                   </button>
@@ -423,15 +437,17 @@
               </div>
             }
 
-            <div class="flex items-center gap-4 text-neutral-400">
-              @if (tenantContext.isCustomDomain()) {
-                <a href="https://profilease.byfaraaz.com" target="_blank" rel="noopener noreferrer" class="hover:text-white underline">
-                  Generated with Profilease
-                </a>
-              } @else {
-                <a routerLink="/" class="hover:text-white underline">Generated with Profilease</a>
-              }
-            </div>
+            @if (!(profile()?.subscriptionPlan === 'pro' && profile()?.hidePlatformBranding)) {
+              <div class="flex items-center gap-4 text-neutral-400">
+                @if (tenantContext.isCustomDomain()) {
+                  <a href="https://profilease.byfaraaz.com" target="_blank" rel="noopener noreferrer" class="hover:text-white underline">
+                    Generated with Profilease
+                  </a>
+                } @else {
+                  <a routerLink="/" class="hover:text-white underline">Generated with Profilease</a>
+                }
+              </div>
+            }
           </div>
         </footer>
       </div>

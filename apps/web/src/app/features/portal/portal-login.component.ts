@@ -21,6 +21,9 @@ export class PortalLoginComponent {
 
   readonly isSubmitting = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly showForgotMode = signal<boolean>(false);
+  readonly resetSentMessage = signal<string | null>(null);
+  readonly forgotEmail = signal<string>('');
 
   readonly credentials = signal({
     email: '',
@@ -32,6 +35,33 @@ export class PortalLoginComponent {
     email(schema.email, { message: 'Valid email required' });
     required(schema.accessKey, { message: 'Access key is required' });
   });
+
+  onForgotEmailInput(event: Event): void {
+    this.forgotEmail.set((event.target as HTMLInputElement).value);
+  }
+
+  onRequestReset(event: Event): void {
+    event.preventDefault();
+    this.errorMessage.set(null);
+    this.resetSentMessage.set(null);
+    const targetEmail = this.forgotEmail().trim();
+    if (!targetEmail) {
+      this.errorMessage.set('Please enter your registered email address.');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    this.clientAuth.requestPasswordReset(targetEmail).subscribe({
+      next: (res) => {
+        this.isSubmitting.set(false);
+        this.resetSentMessage.set(res.message);
+      },
+      error: () => {
+        this.isSubmitting.set(false);
+        this.errorMessage.set('Could not send reset email right now.');
+      },
+    });
+  }
 
   onSubmit(event: Event): void {
     event.preventDefault();
