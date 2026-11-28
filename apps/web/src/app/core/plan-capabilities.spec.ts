@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { getPlanCapabilities, normalizePlan } from '@profilease/types';
 
 describe('Plan Capabilities', () => {
