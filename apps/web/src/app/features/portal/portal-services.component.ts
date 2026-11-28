@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
-import { ServiceItem } from '@profilease/types';
+import { ServiceItem, getPlanCapabilities } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
@@ -19,6 +19,17 @@ export class PortalServicesComponent {
 
   readonly currentProfile = this.clientAuth.currentProfile;
   readonly showAddForm = signal<boolean>(false);
+  readonly serviceError = signal<string | null>(null);
+  readonly serviceLimit = computed<number>(() => {
+    const profile = this.currentProfile();
+    const caps = getPlanCapabilities(profile?.subscriptionPlan);
+    return caps.baseServiceLimit + (profile?.extraServiceSlots || 0);
+  });
+
+  toggleAddForm(): void {
+    this.serviceError.set(null);
+    this.showAddForm.set(!this.showAddForm());
+  }
 
   readonly newServiceState = signal({
     title: '',
@@ -54,6 +65,7 @@ export class PortalServicesComponent {
     };
 
     const updatedServices = [...profile.services, newService];
+    this.serviceError.set(null);
     this.clientAuth.updateProfile({ services: updatedServices }).subscribe({
       next: () => {
         this.showAddForm.set(false);
@@ -65,6 +77,12 @@ export class PortalServicesComponent {
           durationMinutes: 45,
           tagsRaw: 'In-Person, Telehealth',
         });
+      },
+      error: (err: unknown) => {
+        const msg =
+          (err as { error?: { error?: string } })?.error?.error ||
+          'Unable to add service. Please check your plan service quota.';
+        this.serviceError.set(msg);
       },
     });
   }

@@ -634,7 +634,7 @@
                 The practitioner's profile will be live at:
               </p>
               <ul class="list-disc list-inside text-neutral-700 text-[11px] space-y-1">
-                <li>Platform URL: <code class="bg-white px-1.5 py-0.5 border">profilease.byfaraaz.com/&#64;{{ identityModel().slug || 'slug' }}</code></li>
+                <li>Platform URL: <code class="bg-white px-1.5 py-0.5 border">{{ tenantContext.platformHost() }}/&#64;{{ identityModel().slug || 'slug' }}</code></li>
               </ul>
               <p class="text-neutral-500 text-[10px] mt-1">Custom domain can be configured later via the Practitioner Portal → Profile settings.</p>
             </div>

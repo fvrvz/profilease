@@ -115,6 +115,7 @@
           <tr class="border-b border-neutral-200 bg-neutral-100/70 text-neutral-700 uppercase tracking-wider text-[11px]">
             <th class="py-3 px-4">Client / Practitioner</th>
             <th class="py-3 px-4">Profession</th>
+            <th class="py-3 px-4">Plan</th>
             <th class="py-3 px-4">Slug & Route</th>
             <th class="py-3 px-4">Custom Domain</th>
             <th class="py-3 px-4">Country & Currency</th>
@@ -142,6 +143,18 @@
                 <app-sharp-badge [variant]="getProfessionBadge(prof.profession)">
                   {{ prof.profession }}
                 </app-sharp-badge>
+              </td>
+              <td class="py-3.5 px-4">
+                <select
+                  [value]="prof.subscriptionPlan || 'basic'"
+                  (change)="updatePlan(prof.id, $event)"
+                  aria-label="Subscription plan"
+                  class="px-2 py-1 bg-white border border-neutral-900 text-[11px] font-mono font-bold uppercase cursor-pointer"
+                >
+                  <option value="basic">Basic</option>
+                  <option value="mid">Mid</option>
+                  <option value="pro">Pro</option>
+                </select>
               </td>
               <td class="py-3.5 px-4">
                 <a
