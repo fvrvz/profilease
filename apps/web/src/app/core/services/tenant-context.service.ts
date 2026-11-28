@@ -50,6 +50,7 @@ export class TenantContextService {
 
     if (
       DEFAULT_LOCAL_HOSTS.has(host) ||
+      host === this.platformHost() ||
       host.endsWith('.workers.dev') ||
       host.endsWith('.pages.dev') ||
       host.endsWith('.github.io')
