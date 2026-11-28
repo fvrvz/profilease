@@ -42,6 +42,14 @@ interface ProfileRow {
   timezone: string;
   credentials: string | null;
   social_links?: string | null;
+  location?: string | null;
+  clinic_or_school_name?: string | null;
+  about_detailed?: string | null;
+  timings_note?: string | null;
+  emergency_notice?: string | null;
+  service_mode?: string | null;
+  testimonials_json?: string | null;
+  google_reviews_url?: string | null;
 }
 
 interface ServiceRow {
@@ -51,6 +59,8 @@ interface ServiceRow {
   description: string;
   duration_minutes: number;
   price: number;
+  category?: string | null;
+  tags_json?: string | null;
   is_active: number;
 }
 
@@ -61,6 +71,7 @@ interface AvailabilityRow {
   enabled: number;
   start_time: string;
   end_time: string;
+  slot_duration_minutes?: number | null;
 }
 
 interface AppointmentRow {
@@ -214,7 +225,14 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       profession?: string;
       title?: string;
       bio?: string;
+      aboutDetailed?: string;
       avatarUrl?: string;
+      location?: string;
+      clinicOrSchoolName?: string;
+      timingsNote?: string;
+      emergencyNotice?: string;
+      serviceMode?: string;
+      googleReviewsUrl?: string;
       theme?: string;
       customDomain?: string | null;
       clientAccessKey?: string;
@@ -225,8 +243,9 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       timezone?: string;
       credentials?: string[];
       socialLinks?: Array<{ platform: string; url: string }>;
-      services?: Array<{ id?: string; name?: string; title?: string; description?: string; durationMinutes?: number; price?: number; isActive?: boolean }>;
-      availability?: Array<{ id?: string; day?: string; dayOfWeek?: string; enabled: boolean; startTime?: string; endTime?: string }>;
+      testimonials?: Array<{ id?: string; clientName: string; roleOrCondition: string; comment: string; rating: number; date: string }>;
+      services?: Array<{ id?: string; name?: string; title?: string; description?: string; durationMinutes?: number; price?: number; category?: string; tags?: string[]; isActive?: boolean }>;
+      availability?: Array<{ id?: string; day?: string; dayOfWeek?: string; enabled: boolean; startTime?: string; endTime?: string; slotDurationMinutes?: number }>;
     }>().catch(() => ({}));
 
     if (!body || !body.name || !body.slug || !body.profession) {
@@ -256,20 +275,40 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const timezone = body.timezone || 'UTC';
     const credentials = JSON.stringify(body.credentials || []);
     const socialLinks = JSON.stringify(body.socialLinks || []);
+    const location = body.location || '';
+    const clinicOrSchoolName = body.clinicOrSchoolName || `${name}'s Practice`;
+    const aboutDetailed = body.aboutDetailed || bio;
+    const timingsNote = body.timingsNote || '';
+    const emergencyNotice = body.emergencyNotice || null;
+    const serviceMode = body.serviceMode || 'clinic';
+    const testimonialsJson = JSON.stringify(body.testimonials || []);
+    const googleReviewsUrl = body.googleReviewsUrl || null;
 
     await env.DB.prepare(`
-      INSERT INTO profiles (id, slug, name, profession, title, bio, avatar_url, theme, custom_domain, client_access_key, must_change_password, email, phone, country, currency, timezone, credentials, social_links)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, slug, name, profession, title, bio, avatarUrl, theme, customDomain, clientAccessKey, mustChangePassword, email, phone, country, currency, timezone, credentials, socialLinks).run();
+      INSERT INTO profiles (
+        id, slug, name, profession, title, bio, avatar_url, theme, custom_domain,
+        client_access_key, must_change_password, email, phone, country, currency, timezone,
+        credentials, social_links, location, clinic_or_school_name, about_detailed,
+        timings_note, emergency_notice, service_mode, testimonials_json, google_reviews_url
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id, slug, name, profession, title, bio, avatarUrl, theme, customDomain,
+      clientAccessKey, mustChangePassword, email, phone, country, currency, timezone,
+      credentials, socialLinks, location, clinicOrSchoolName, aboutDetailed,
+      timingsNote, emergencyNotice, serviceMode, testimonialsJson, googleReviewsUrl
+    ).run();
 
     if (Array.isArray(body.services)) {
       for (const s of body.services) {
         const sId = s.id || `srv-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
         const sName = s.title || s.name || 'Consultation';
+        const sCat = s.category || 'Consultation';
+        const sTags = JSON.stringify(s.tags || []);
         await env.DB.prepare(`
-          INSERT INTO services (id, profile_id, name, description, duration_minutes, price, is_active)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).bind(sId, id, sName, s.description || '', s.durationMinutes || 30, s.price || 0, s.isActive !== false ? 1 : 0).run();
+          INSERT INTO services (id, profile_id, name, description, duration_minutes, price, category, tags_json, is_active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(sId, id, sName, s.description || '', s.durationMinutes || 30, s.price || 0, sCat, sTags, s.isActive !== false ? 1 : 0).run();
       }
     }
 
@@ -278,10 +317,11 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
         const aId = a.id || `avail-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
         const rawDay = a.day || a.dayOfWeek || 'Monday';
         const dayStr = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
+        const slotDur = a.slotDurationMinutes || 30;
         await env.DB.prepare(`
-          INSERT INTO availabilities (id, profile_id, day_of_week, enabled, start_time, end_time)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(aId, id, dayStr, a.enabled ? 1 : 0, a.startTime || '09:00', a.endTime || '17:00').run();
+          INSERT INTO availabilities (id, profile_id, day_of_week, enabled, start_time, end_time, slot_duration_minutes)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(aId, id, dayStr, a.enabled ? 1 : 0, a.startTime || '09:00', a.endTime || '17:00', slotDur).run();
       }
     }
 
@@ -725,15 +765,26 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       id?: string;
       name?: string;
       title?: string;
+      profession?: string;
       bio?: string;
+      aboutDetailed?: string;
       avatarUrl?: string;
       phone?: string;
       customDomain?: string | null;
       location?: string;
       clinicOrSchoolName?: string;
+      country?: string;
+      currency?: string;
+      timezone?: string;
+      timingsNote?: string;
+      serviceMode?: string;
+      googleReviewsUrl?: string | null;
       credentials?: string[];
       socialLinks?: Array<{ platform: string; url: string }>;
-      emergencyNotice?: string;
+      testimonials?: Array<{ id?: string; clientName: string; roleOrCondition: string; comment: string; rating: number; date: string }>;
+      services?: Array<{ id?: string; name?: string; title?: string; description?: string; durationMinutes?: number; price?: number; category?: string; tags?: string[]; isActive?: boolean }>;
+      availability?: Array<{ id?: string; day?: string; dayOfWeek?: string; enabled: boolean; startTime?: string; endTime?: string; slotDurationMinutes?: number }>;
+      emergencyNotice?: string | null;
     }>().catch(() => ({}));
 
     if (!body.id) {
@@ -747,19 +798,67 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
     const updatedName = body.name ?? current.name;
     const updatedTitle = body.title ?? current.title;
+    const updatedProfession = body.profession ?? current.profession;
     const updatedBio = body.bio ?? current.bio;
+    const updatedAboutDetailed = body.aboutDetailed !== undefined ? body.aboutDetailed : (current.about_detailed ?? current.bio);
     const updatedAvatar = body.avatarUrl ?? current.avatar_url;
     const updatedPhone = body.phone ?? current.phone;
     const updatedCustomDomain =
       body.customDomain !== undefined ? (body.customDomain?.trim() || null) : current.custom_domain;
+    const updatedLocation = body.location !== undefined ? body.location : (current.location ?? '');
+    const updatedClinicOrSchool = body.clinicOrSchoolName !== undefined ? body.clinicOrSchoolName : (current.clinic_or_school_name ?? '');
+    const updatedCountry = body.country ?? current.country;
+    const updatedCurrency = body.currency ?? current.currency;
+    const updatedTimezone = body.timezone ?? current.timezone;
+    const updatedTimingsNote = body.timingsNote !== undefined ? body.timingsNote : (current.timings_note ?? '');
+    const updatedServiceMode = body.serviceMode ?? current.service_mode ?? 'clinic';
+    const updatedEmergencyNotice = body.emergencyNotice !== undefined ? (body.emergencyNotice || null) : (current.emergency_notice ?? null);
+    const updatedGoogleReviewsUrl = body.googleReviewsUrl !== undefined ? (body.googleReviewsUrl?.trim() || null) : (current.google_reviews_url ?? null);
     const updatedCredentials = body.credentials ? JSON.stringify(body.credentials) : current.credentials;
     const updatedSocialLinks = body.socialLinks ? JSON.stringify(body.socialLinks) : (current.social_links || null);
+    const updatedTestimonials = body.testimonials !== undefined ? JSON.stringify(body.testimonials) : (current.testimonials_json || null);
 
     await env.DB.prepare(`
       UPDATE profiles
-      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, custom_domain = ?, credentials = ?, social_links = ?
+      SET name = ?, title = ?, profession = ?, bio = ?, about_detailed = ?, avatar_url = ?, phone = ?,
+          custom_domain = ?, location = ?, clinic_or_school_name = ?, country = ?, currency = ?, timezone = ?,
+          timings_note = ?, service_mode = ?, emergency_notice = ?, google_reviews_url = ?,
+          credentials = ?, social_links = ?, testimonials_json = ?
       WHERE id = ?
-    `).bind(updatedName, updatedTitle, updatedBio, updatedAvatar, updatedPhone, updatedCustomDomain, updatedCredentials, updatedSocialLinks, body.id).run();
+    `).bind(
+      updatedName, updatedTitle, updatedProfession, updatedBio, updatedAboutDetailed, updatedAvatar, updatedPhone,
+      updatedCustomDomain, updatedLocation, updatedClinicOrSchool, updatedCountry, updatedCurrency, updatedTimezone,
+      updatedTimingsNote, updatedServiceMode, updatedEmergencyNotice, updatedGoogleReviewsUrl,
+      updatedCredentials, updatedSocialLinks, updatedTestimonials, body.id
+    ).run();
+
+    if (Array.isArray(body.services)) {
+      await env.DB.prepare('DELETE FROM services WHERE profile_id = ?').bind(body.id).run();
+      for (const s of body.services) {
+        const sId = s.id || `srv-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        const sName = s.title || s.name || 'Consultation';
+        const sCat = s.category || 'Consultation';
+        const sTags = JSON.stringify(s.tags || []);
+        await env.DB.prepare(`
+          INSERT INTO services (id, profile_id, name, description, duration_minutes, price, category, tags_json, is_active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(sId, body.id, sName, s.description || '', s.durationMinutes || 30, s.price || 0, sCat, sTags, s.isActive !== false ? 1 : 0).run();
+      }
+    }
+
+    if (Array.isArray(body.availability)) {
+      await env.DB.prepare('DELETE FROM availabilities WHERE profile_id = ?').bind(body.id).run();
+      for (const a of body.availability) {
+        const aId = a.id || `avail-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        const rawDay = a.day || a.dayOfWeek || 'Monday';
+        const dayStr = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
+        const slotDur = a.slotDurationMinutes || 30;
+        await env.DB.prepare(`
+          INSERT INTO availabilities (id, profile_id, day_of_week, enabled, start_time, end_time, slot_duration_minutes)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(aId, body.id, dayStr, a.enabled ? 1 : 0, a.startTime || '09:00', a.endTime || '17:00', slotDur).run();
+      }
+    }
 
     const updatedRow = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(body.id).first<ProfileRow>();
     if (!updatedRow) {
@@ -1118,6 +1217,39 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     socialLinks = [];
   }
 
+  let testimonials: Array<{ id: string; clientName: string; roleOrCondition: string; comment: string; rating: number; date: string }> = [];
+  try {
+    if (row.testimonials_json) testimonials = JSON.parse(row.testimonials_json);
+  } catch {
+    testimonials = [];
+  }
+
+  const dayOrder: Record<string, number> = {
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
+    Sunday: 7,
+  };
+
+  const formattedAvailability = availRes.results
+    .map((a) => {
+      const rawDay = a.day_of_week || '';
+      const capitalized = rawDay ? rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase() : 'Monday';
+      return {
+        id: a.id,
+        day: capitalized,
+        dayOfWeek: capitalized,
+        enabled: a.enabled === 1,
+        startTime: a.start_time || '09:00',
+        endTime: a.end_time || '17:00',
+        slotDurationMinutes: a.slot_duration_minutes || 30,
+      };
+    })
+    .sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+
   return {
     id: row.id,
     slug: row.slug,
@@ -1125,7 +1257,7 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     profession: row.profession,
     title: row.title,
     bio: row.bio,
-    aboutDetailed: row.bio,
+    aboutDetailed: row.about_detailed || row.bio,
     avatarUrl: row.avatar_url,
     theme: row.theme,
     customDomain: row.custom_domain,
@@ -1136,54 +1268,36 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     country: row.country,
     currency: row.currency,
     timezone: row.timezone,
-    location: row.country || 'Global / Online',
-    clinicOrSchoolName: row.profession === 'doctor' ? 'Specialist Care Clinic' : 'Academic Department',
-    timingsNote: 'Available during practice hours',
+    location: row.location || row.country || 'Global / Online',
+    serviceMode: row.service_mode || 'clinic',
+    clinicOrSchoolName: row.clinic_or_school_name || (row.profession === 'doctor' ? 'Specialist Care Clinic' : `${row.name}'s Practice`),
+    timingsNote: row.timings_note || 'Available during practice hours',
+    emergencyNotice: row.emergency_notice || undefined,
+    googleReviewsUrl: row.google_reviews_url || undefined,
     isPublished: true,
     credentials,
     socialLinks,
-    services: servicesRes.results.map((s) => ({
-      id: s.id,
-      title: s.name,
-      name: s.name,
-      description: s.description,
-      durationMinutes: s.duration_minutes,
-      price: s.price,
-      category: s.duration_minutes >= 60 ? 'Comprehensive' : 'Standard Session',
-      tags: ['Online / In-Person'],
-      isActive: s.is_active === 1,
-    })),
-    availability: availRes.results.map((a) => {
-      const rawDay = a.day_of_week || '';
-      const capitalized = rawDay ? rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase() : 'Monday';
+    services: servicesRes.results.map((s) => {
+      let tags: string[] = [];
+      try {
+        if (s.tags_json) tags = JSON.parse(s.tags_json);
+      } catch {
+        tags = [];
+      }
       return {
-        id: a.id,
-        day: capitalized,
-        dayOfWeek: capitalized,
-        enabled: a.enabled === 1,
-        startTime: a.start_time || '09:00',
-        endTime: a.end_time || '17:00',
-        slotDurationMinutes: 30,
+        id: s.id,
+        title: s.name,
+        name: s.name,
+        description: s.description,
+        durationMinutes: s.duration_minutes,
+        price: s.price,
+        category: s.category || (s.duration_minutes >= 60 ? 'Comprehensive' : 'Standard Session'),
+        tags,
+        isActive: s.is_active === 1,
       };
     }),
-    testimonials: [
-      {
-        id: `test-1-${row.id}`,
-        clientName: 'Arthur Pendelton',
-        roleOrCondition: 'Verified Client',
-        comment: 'Outstanding professionalism and deep domain expertise. The sessions were clear, actionable, and transformative.',
-        rating: 5,
-        date: '2026-02-04',
-      },
-      {
-        id: `test-2-${row.id}`,
-        clientName: 'Claire Davenport',
-        roleOrCondition: 'Verified Client',
-        comment: 'Very thorough and communicative. The booking process was seamless and the results exceeded expectations.',
-        rating: 5,
-        date: '2026-01-20',
-      },
-    ],
+    availability: formattedAvailability,
+    testimonials,
   };
 }
 

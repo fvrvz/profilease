@@ -58,11 +58,46 @@ export class PortfolioPageComponent implements OnInit {
     }
   }
 
+  scrollToSection(event: Event, sectionId: string): void {
+    event.preventDefault();
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
   selectServiceAndScroll(service: ServiceItem): void {
     this.selectedServiceId.set(service.id);
     const element = document.getElementById('booking-section');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  locationHeading(): string {
+    switch (this.profile()?.serviceMode) {
+      case 'home-visit':
+        return 'Home Visit Service Area';
+      case 'online':
+        return 'Virtual Practice';
+      case 'hybrid':
+        return 'Office & Service Coverage';
+      case 'clinic':
+      default:
+        return 'Office Location';
+    }
+  }
+
+  serviceModeNote(): string | null {
+    switch (this.profile()?.serviceMode) {
+      case 'home-visit':
+        return 'Mobile / Home-Visit Practice: Practitioner travels directly to your residence or care location.';
+      case 'online':
+        return '100% Online / Telehealth: Sessions are conducted remotely via secure video or phone.';
+      case 'hybrid':
+        return 'Hybrid Practice: Available for in-office appointments, home visits, and online consultations.';
+      default:
+        return null;
     }
   }
 
