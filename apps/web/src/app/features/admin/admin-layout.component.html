@@ -1,15 +1,15 @@
 <div class="min-h-screen bg-neutral-100 text-neutral-900 flex flex-col font-sans">
   <!-- Top Admin Header -->
   <header class="bg-neutral-900 text-white border-b-2 border-neutral-900 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
       <!-- Logo & Brand -->
-      <div class="flex items-center gap-3">
-        <span class="w-3.5 h-3.5 bg-white"></span>
-        <div>
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block leading-none">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="w-3.5 h-3.5 bg-white shrink-0"></span>
+        <div class="min-w-0">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block leading-none truncate">
             Admin Control Room
           </span>
-          <span class="text-sm font-black uppercase tracking-tight text-white">
+          <span class="text-xs sm:text-sm font-black uppercase tracking-tight text-white block truncate">
             Profilease Multi-Tenant Engine
           </span>
         </div>
@@ -60,12 +60,45 @@
         <button
           type="button"
           (click)="logout()"
-          class="px-3 py-1.5 bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-300 text-xs font-mono font-bold uppercase transition-colors cursor-pointer border border-neutral-700"
+          class="px-3 py-1.5 bg-neutral-800 hover:bg-red-600 hover:text-white text-neutral-300 text-xs font-mono font-bold uppercase transition-colors cursor-pointer border border-neutral-700 shrink-0"
         >
           Logout
         </button>
       </div>
     </div>
+
+    <!-- Mobile / Tablet Scrollable Nav -->
+    <nav class="md:hidden border-t border-neutral-800 bg-neutral-950 px-3 py-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap font-mono text-[11px] uppercase font-bold">
+      <a
+        routerLink="/admin"
+        routerLinkActive="bg-white text-neutral-900"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+      >
+        Clients
+      </a>
+      <a
+        routerLink="/admin/onboard"
+        routerLinkActive="bg-white text-neutral-900"
+        class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+      >
+        + Onboard
+      </a>
+      <a
+        routerLink="/admin/domains"
+        routerLinkActive="bg-white text-neutral-900"
+        class="px-3 py-1.5 text-neutral-300 hover:bg-neutral-800 shrink-0"
+      >
+        Domains
+      </a>
+      <a
+        routerLink="/portal"
+        target="_blank"
+        class="px-3 py-1.5 text-emerald-400 border border-emerald-700 shrink-0"
+      >
+        Client Portal &rarr;
+      </a>
+    </nav>
   </header>
 
   <!-- Main Layout Body -->
