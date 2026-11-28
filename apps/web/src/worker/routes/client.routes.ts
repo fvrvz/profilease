@@ -107,6 +107,7 @@ clientRoutes.put('/profile', async (c) => {
     phone?: string;
     customDomain?: string | null;
     location?: string;
+    city?: string;
     clinicOrSchoolName?: string;
     country?: string;
     currency?: string;
@@ -183,6 +184,7 @@ clientRoutes.put('/profile', async (c) => {
           ? body.clinicOrSchoolName
           : (current.clinicOrSchoolName ?? ''),
       country: body.country ?? current.country,
+      city: body.city !== undefined ? body.city.trim() : (current.city ?? ''),
       currency: body.currency ?? current.currency,
       timezone: body.timezone ?? current.timezone,
       timingsNote:

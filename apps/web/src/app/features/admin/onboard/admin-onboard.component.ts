@@ -129,6 +129,7 @@ export class AdminOnboardComponent {
     slug: '',
     email: '',
     phone: '',
+    city: '',
     location: '',
     avatarUrl: '',
   });
@@ -270,6 +271,7 @@ export class AdminOnboardComponent {
       bio: bioVal.bio || 'Dedicated professional offering personalized client consultations and services.',
       aboutDetailed: bioVal.aboutDetailed || 'Providing excellence through rigorous standards and compassionate guidance.',
       avatarUrl: idVal.avatarUrl,
+      city: idVal.city.trim(),
       location:
         idVal.location.trim() ||
         (this.selectedServiceMode() === 'home-visit'

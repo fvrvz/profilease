@@ -88,6 +88,7 @@ export async function formatProfileWithRelations(
     mustChangePassword: Boolean(row.mustChangePassword),
     email: row.email,
     phone: row.phone,
+    city: row.city || '',
     country: row.country,
     currency: row.currency,
     timezone: row.timezone,
