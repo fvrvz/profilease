@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
   BorderStyle,
   LayoutVariant,
@@ -7,6 +8,7 @@ import {
   getPlanCapabilities,
 } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
+import { ToastService } from '@service/toast.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 
 interface ThemeOption {
@@ -17,24 +19,32 @@ interface ThemeOption {
 
 @Component({
   selector: 'app-portal-appearance',
-  imports: [SharpButtonComponent],
+  imports: [RouterLink, SharpButtonComponent],
   template: `
-    <div class="space-y-6 max-w-4xl">
-      <!-- Plan Header -->
-      <div class="bg-white border-2 border-neutral-900 p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="space-y-8 font-sans">
+      <!-- Page Header (aligned with other portal screens) -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-neutral-900 pb-4">
         <div>
-          <span class="text-[11px] font-mono uppercase tracking-widest text-neutral-500 block">
-            Appearance &amp; Plan Controls
+          <span class="text-xs font-mono uppercase tracking-widest text-neutral-500 block">
+            Appearance &amp; Theme Studio
           </span>
-          <h1 class="text-xl font-black uppercase tracking-tight text-neutral-900">
+          <h1 class="text-2xl font-black uppercase tracking-tight text-neutral-900">
             Theme, Layout &amp; Custom Styling
           </h1>
           <p class="text-xs font-mono text-neutral-600 mt-1">
             Visitors can also toggle Light / Dark / System mode directly on your portfolio.
           </p>
         </div>
-        <div class="px-4 py-2 bg-neutral-900 text-white font-mono text-xs font-bold uppercase tracking-wider shrink-0">
-          Plan: {{ capabilities().label }}
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+          <span class="px-3 py-2 bg-neutral-900 text-white font-mono text-xs font-bold uppercase tracking-wider">
+            Plan: {{ capabilities().label }}
+          </span>
+          <a
+            routerLink="/portal/plan"
+            class="px-3 py-2 bg-white hover:bg-neutral-900 hover:text-white text-neutral-900 border-2 border-neutral-900 font-mono text-xs font-bold uppercase transition-colors"
+          >
+            Change Plan &rarr;
+          </a>
         </div>
       </div>
 
@@ -279,6 +289,7 @@ interface ThemeOption {
 })
 export class PortalAppearanceComponent implements OnInit {
   private readonly clientAuth = inject(ClientAuthService);
+  private readonly toast = inject(ToastService);
 
   readonly currentProfile = this.clientAuth.currentProfile;
   readonly capabilities = computed(() => getPlanCapabilities(this.currentProfile()?.subscriptionPlan));
@@ -341,6 +352,7 @@ export class PortalAppearanceComponent implements OnInit {
     this.errorMessage.set(null);
     this.saveSuccess.set(false);
     this.isSaving.set(true);
+    this.toast.startLoading('Saving appearance settings...');
 
     const caps = this.capabilities();
     const payload: Record<string, unknown> = {
@@ -367,13 +379,17 @@ export class PortalAppearanceComponent implements OnInit {
     this.clientAuth.updateProfile(payload).subscribe({
       next: () => {
         this.isSaving.set(false);
+        this.toast.stopLoading();
         this.saveSuccess.set(true);
+        this.toast.showSuccess('Appearance settings saved!');
         setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err: unknown) => {
         this.isSaving.set(false);
+        this.toast.stopLoading();
         const msg = (err as { error?: { error?: string } })?.error?.error || 'Failed to save appearance settings.';
         this.errorMessage.set(msg);
+        this.toast.showError(msg);
       },
     });
   }

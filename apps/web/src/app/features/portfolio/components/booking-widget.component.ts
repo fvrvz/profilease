@@ -1,8 +1,10 @@
 import { Component, input, signal, computed, effect, inject } from '@angular/core';
-import { form, FormField, required, email } from '@angular/forms/signals';
+import { form, FormField, required, email, submit } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { UserProfile, ServiceItem, AppointmentBooking } from '@profilease/types';
 import { AppointmentService } from '@service/appointment.service';
 import { CurrencyService } from '@service/currency.service';
+import { ToastService } from '@service/toast.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
@@ -31,6 +33,7 @@ export class BookingWidgetComponent {
 
   protected readonly appointmentService = inject(AppointmentService);
   protected readonly currencyService = inject(CurrencyService);
+  private readonly toast = inject(ToastService);
 
   readonly step = signal<number>(1);
   readonly selectedServiceId = signal<string>('');
@@ -168,28 +171,31 @@ export class BookingWidgetComponent {
 
   onSubmitBooking(e: Event): void {
     e.preventDefault();
-    if (this.bookingForm().invalid()) {
-      return;
-    }
-
-    const modelVal = this.bookingModel();
-    this.appointmentService
-      .book({
-        profileId: this.profile().id,
-        serviceId: this.selectedServiceId(),
-        clientName: modelVal.clientName,
-        clientEmail: modelVal.clientEmail,
-        clientPhone: modelVal.clientPhone,
-        appointmentDate: this.selectedDate(),
-        appointmentTime: this.selectedTimeSlot(),
-        notes: modelVal.notes,
-      })
-      .subscribe({
-        next: (booking) => {
-          this.confirmedBooking.set(booking);
-          this.step.set(4);
-        },
-      });
+    void submit(this.bookingForm, async () => {
+      const modelVal = this.bookingModel();
+      this.toast.startLoading('Confirming your appointment...');
+      try {
+        const booking = await firstValueFrom(
+          this.appointmentService.book({
+            profileId: this.profile().id,
+            serviceId: this.selectedServiceId(),
+            clientName: modelVal.clientName,
+            clientEmail: modelVal.clientEmail,
+            clientPhone: modelVal.clientPhone,
+            appointmentDate: this.selectedDate(),
+            appointmentTime: this.selectedTimeSlot(),
+            notes: modelVal.notes,
+          })
+        );
+        this.confirmedBooking.set(booking);
+        this.step.set(4);
+        this.toast.showSuccess('Appointment confirmed!');
+      } catch {
+        this.toast.showError('Unable to complete booking. Please try again.');
+      } finally {
+        this.toast.stopLoading();
+      }
+    });
   }
 
   resetBooking(): void {
