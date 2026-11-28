@@ -67,6 +67,7 @@ profilesRoutes.post('/profiles', async (c) => {
     aboutDetailed?: string;
     avatarUrl?: string;
     location?: string;
+    city?: string;
     clinicOrSchoolName?: string;
     timingsNote?: string;
     emergencyNotice?: string;
@@ -144,6 +145,7 @@ profilesRoutes.post('/profiles', async (c) => {
     email: body.email || '',
     phone: body.phone || '',
     country: body.country || 'United States',
+    city: body.city?.trim() || '',
     currency: body.currency || 'USD',
     timezone: body.timezone || 'UTC',
     credentials: JSON.stringify(body.credentials || []),
@@ -231,6 +233,7 @@ profilesRoutes.put('/profiles/:id', async (c) => {
     theme?: string;
     customDomain?: string | null;
     country?: string;
+    city?: string;
     currency?: string;
     timezone?: string;
     credentials?: string[];
@@ -257,6 +260,7 @@ profilesRoutes.put('/profiles/:id', async (c) => {
       theme: body.theme ?? current.theme,
       customDomain: body.customDomain !== undefined ? body.customDomain : current.customDomain,
       country: body.country ?? current.country,
+      city: body.city !== undefined ? body.city.trim() : (current.city ?? ''),
       currency: body.currency ?? current.currency,
       timezone: body.timezone ?? current.timezone,
       credentials: body.credentials !== undefined ? JSON.stringify(body.credentials) : current.credentials,

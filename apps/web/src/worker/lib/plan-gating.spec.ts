@@ -16,6 +16,7 @@ const baseProfile: ProfileRecord = {
   mustChangePassword: 0,
   email: 'test@example.com',
   phone: '123',
+  city: 'New York',
   country: 'US',
   currency: 'USD',
   timezone: 'UTC',

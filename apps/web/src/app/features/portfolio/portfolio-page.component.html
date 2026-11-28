@@ -113,7 +113,12 @@
                   <app-sharp-badge [variant]="badgeVariant()">
                     {{ profile()?.profession | uppercase }}
                   </app-sharp-badge>
-                  <span class="text-xs font-mono text-neutral-500">• {{ profile()?.location }}</span>
+                  @if (cityCountryLabel()) {
+                    <span class="text-xs font-mono text-neutral-700 font-bold">• {{ cityCountryLabel() }}</span>
+                  }
+                  @if (profile()?.location) {
+                    <span class="text-xs font-mono text-neutral-500">• {{ profile()?.location }}</span>
+                  }
                 </div>
 
                 <h1 class="text-2xl sm:text-4xl font-black uppercase tracking-tight text-neutral-900 mb-2">
@@ -369,6 +374,9 @@
                 </h2>
                 <div class="space-y-3 text-xs font-mono text-neutral-700 mb-6">
                   <p class="font-bold text-neutral-900 text-sm">{{ profile()?.clinicOrSchoolName }}</p>
+                  @if (cityCountryLabel()) {
+                    <p class="font-bold text-neutral-800">{{ cityCountryLabel() }}</p>
+                  }
                   @if (profile()?.location) {
                     <p>{{ profile()?.location }}</p>
                   }
