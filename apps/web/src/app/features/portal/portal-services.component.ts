@@ -1,7 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { form, FormField, required } from '@angular/forms/signals';
+import { form, FormField, required, submit } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { ServiceItem, getPlanCapabilities } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
+import { ToastService } from '@service/toast.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 
@@ -16,6 +18,7 @@ import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 })
 export class PortalServicesComponent {
   private readonly clientAuth = inject(ClientAuthService);
+  private readonly toast = inject(ToastService);
 
   readonly currentProfile = this.clientAuth.currentProfile;
   readonly showAddForm = signal<boolean>(false);
@@ -48,26 +51,28 @@ export class PortalServicesComponent {
 
   onAddService(event: Event): void {
     event.preventDefault();
-    const val = this.newServiceState();
-    if (!val.title || !val.description) return;
+    void submit(this.serviceForm, async () => {
+      const val = this.newServiceState();
+      if (!val.title || !val.description) return;
 
-    const profile = this.currentProfile();
-    if (!profile) return;
+      const profile = this.currentProfile();
+      if (!profile) return;
 
-    const newService: ServiceItem = {
-      id: `srv-${Date.now()}`,
-      title: val.title,
-      description: val.description,
-      category: val.category,
-      price: Number(val.price) || 100,
-      durationMinutes: Number(val.durationMinutes) || 30,
-      tags: val.tagsRaw.split(',').map((t) => t.trim()).filter(Boolean),
-    };
+      const newService: ServiceItem = {
+        id: `srv-${Date.now()}`,
+        title: val.title,
+        description: val.description,
+        category: val.category,
+        price: Number(val.price) || 100,
+        durationMinutes: Number(val.durationMinutes) || 30,
+        tags: val.tagsRaw.split(',').map((t) => t.trim()).filter(Boolean),
+      };
 
-    const updatedServices = [...profile.services, newService];
-    this.serviceError.set(null);
-    this.clientAuth.updateProfile({ services: updatedServices }).subscribe({
-      next: () => {
+      const updatedServices = [...profile.services, newService];
+      this.serviceError.set(null);
+      this.toast.startLoading('Publishing service...');
+      try {
+        await firstValueFrom(this.clientAuth.updateProfile({ services: updatedServices }));
         this.showAddForm.set(false);
         this.newServiceState.set({
           title: '',
@@ -77,13 +82,16 @@ export class PortalServicesComponent {
           durationMinutes: 45,
           tagsRaw: 'In-Person, Telehealth',
         });
-      },
-      error: (err: unknown) => {
+        this.toast.showSuccess('Service added to your catalog!');
+      } catch (err: unknown) {
         const msg =
           (err as { error?: { error?: string } })?.error?.error ||
           'Unable to add service. Please check your plan service quota.';
         this.serviceError.set(msg);
-      },
+        this.toast.showError(msg);
+      } finally {
+        this.toast.stopLoading();
+      }
     });
   }
 

@@ -1,8 +1,10 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { form, FormField, required } from '@angular/forms/signals';
+import { form, FormField, required, submit } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { ServiceMode, SocialLink, SocialPlatform, Testimonial } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
 import { TenantContextService } from '@service/tenant-context.service';
+import { ToastService } from '@service/toast.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpIconComponent } from '@shared/components/sharp-icon.component';
 import { SharpImageUploaderComponent } from '@shared/components/sharp-image-uploader.component';
@@ -22,6 +24,7 @@ import { SharpSelectComponent, SharpSelectOption } from '@shared/components/shar
 })
 export class PortalProfileComponent implements OnInit {
   private readonly clientAuth = inject(ClientAuthService);
+  private readonly toast = inject(ToastService);
   protected readonly tenantContext = inject(TenantContextService);
 
   readonly currentProfile = this.clientAuth.currentProfile;
@@ -161,33 +164,42 @@ export class PortalProfileComponent implements OnInit {
 
   onSaveProfile(event: Event): void {
     event.preventDefault();
-    const val = this.profileState();
-    if (!val.name || !val.title || !val.bio || !val.avatarUrl) return;
+    void submit(this.profileForm, async () => {
+      const val = this.profileState();
+      if (!val.name || !val.title || !val.bio || !val.avatarUrl) return;
 
-    this.clientAuth
-      .updateProfile({
-        name: val.name,
-        title: val.title,
-        profession: this.selectedProfession(),
-        avatarUrl: val.avatarUrl,
-        customDomain: val.customDomain.trim() || undefined,
-        clinicOrSchoolName: val.clinicOrSchoolName,
-        location: val.location,
-        serviceMode: this.selectedServiceMode() as ServiceMode,
-        phone: val.phone,
-        credentials: val.credentialsRaw.split(',').map((c) => c.trim()).filter(Boolean),
-        socialLinks: this.socialLinksList(),
-        testimonials: this.testimonialsList(),
-        googleReviewsUrl: val.googleReviewsUrl.trim() || undefined,
-        bio: val.bio,
-        aboutDetailed: val.aboutDetailed,
-        emergencyNotice: val.emergencyNotice || undefined,
-      })
-      .subscribe({
-        next: () => {
-          this.saveSuccess.set(true);
-          setTimeout(() => this.saveSuccess.set(false), 3000);
-        },
-      });
+      this.toast.startLoading('Saving profile details...');
+      try {
+        await firstValueFrom(
+          this.clientAuth.updateProfile({
+            name: val.name,
+            title: val.title,
+            profession: this.selectedProfession(),
+            avatarUrl: val.avatarUrl,
+            customDomain: val.customDomain.trim() || undefined,
+            clinicOrSchoolName: val.clinicOrSchoolName,
+            location: val.location,
+            serviceMode: this.selectedServiceMode() as ServiceMode,
+            phone: val.phone,
+            credentials: val.credentialsRaw.split(',').map((c) => c.trim()).filter(Boolean),
+            socialLinks: this.socialLinksList(),
+            testimonials: this.testimonialsList(),
+            googleReviewsUrl: val.googleReviewsUrl.trim() || undefined,
+            bio: val.bio,
+            aboutDetailed: val.aboutDetailed,
+            emergencyNotice: val.emergencyNotice || undefined,
+          })
+        );
+        this.saveSuccess.set(true);
+        this.toast.showSuccess('Profile details saved!');
+        setTimeout(() => this.saveSuccess.set(false), 3000);
+      } catch (err: unknown) {
+        const msg =
+          (err as { error?: { error?: string } })?.error?.error || 'Failed to save profile details.';
+        this.toast.showError(msg);
+      } finally {
+        this.toast.stopLoading();
+      }
+    });
   }
 }

@@ -1,9 +1,11 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { form, FormField, required } from '@angular/forms/signals';
+import { form, FormField, required, submit } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { DayAvailability, WeekDay } from '@profilease/types';
 import { ClientAuthService } from '@service/client-auth.service';
 import { CurrencyService } from '@service/currency.service';
+import { ToastService } from '@service/toast.service';
 import { SharpButtonComponent } from '@shared/components/sharp-button.component';
 import { SharpSelectComponent, SharpSelectOption } from '@shared/components/sharp-select.component';
 
@@ -19,6 +21,7 @@ import { SharpSelectComponent, SharpSelectOption } from '@shared/components/shar
 })
 export class PortalAvailabilityComponent implements OnInit {
   private readonly clientAuth = inject(ClientAuthService);
+  private readonly toast = inject(ToastService);
   protected readonly currencyService = inject(CurrencyService);
 
   readonly currentProfile = this.clientAuth.currentProfile;
@@ -76,20 +79,27 @@ export class PortalAvailabilityComponent implements OnInit {
 
   onSaveRegional(event: Event): void {
     event.preventDefault();
-    const val = this.regionalState();
-    this.clientAuth
-      .updateProfile({
-        country: val.country,
-        currency: val.currency,
-        timezone: val.timezone,
-        timingsNote: val.timingsNote,
-      })
-      .subscribe({
-        next: () => {
-          this.saveSuccess.set(true);
-          setTimeout(() => this.saveSuccess.set(false), 3000);
-        },
-      });
+    void submit(this.regionalForm, async () => {
+      const val = this.regionalState();
+      this.toast.startLoading('Saving regional settings...');
+      try {
+        await firstValueFrom(
+          this.clientAuth.updateProfile({
+            country: val.country,
+            currency: val.currency,
+            timezone: val.timezone,
+            timingsNote: val.timingsNote,
+          })
+        );
+        this.saveSuccess.set(true);
+        this.toast.showSuccess('Regional settings saved!');
+        setTimeout(() => this.saveSuccess.set(false), 3000);
+      } catch {
+        this.toast.showError('Failed to save regional settings.');
+      } finally {
+        this.toast.stopLoading();
+      }
+    });
   }
 
   toggleDay(index: number): void {
@@ -123,9 +133,15 @@ export class PortalAvailabilityComponent implements OnInit {
   }
 
   saveAvailabilitySchedule(): void {
+    this.toast.startLoading('Saving weekly availability...');
     this.clientAuth.updateProfile({ availability: this.weeklySchedule() }).subscribe({
       next: () => {
-        alert('Weekly consultation schedule saved successfully!');
+        this.toast.stopLoading();
+        this.toast.showSuccess('Weekly consultation schedule saved!');
+      },
+      error: () => {
+        this.toast.stopLoading();
+        this.toast.showError('Failed to save weekly schedule.');
       },
     });
   }
