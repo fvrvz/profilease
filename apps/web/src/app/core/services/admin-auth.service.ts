@@ -19,8 +19,8 @@ export class AdminAuthService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem(this.TOKEN_KEY);
-      const user = localStorage.getItem(this.USER_KEY);
+      const token = sessionStorage.getItem(this.TOKEN_KEY);
+      const user = sessionStorage.getItem(this.USER_KEY);
       if (token) {
         this.isAuthenticated.set(true);
         this.adminUser.set(user || 'Admin');
@@ -35,8 +35,8 @@ export class AdminAuthService {
           this.isAuthenticated.set(true);
           this.adminUser.set(res.username);
           if (isPlatformBrowser(this.platformId)) {
-            localStorage.setItem(this.TOKEN_KEY, res.token);
-            localStorage.setItem(this.USER_KEY, res.username);
+            sessionStorage.setItem(this.TOKEN_KEY, res.token);
+            sessionStorage.setItem(this.USER_KEY, res.username);
           }
         }
       }),
@@ -50,8 +50,8 @@ export class AdminAuthService {
     this.isAuthenticated.set(false);
     this.adminUser.set(null);
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.USER_KEY);
+      sessionStorage.removeItem(this.TOKEN_KEY);
+      sessionStorage.removeItem(this.USER_KEY);
     }
     this.router.navigate(['/admin/login']);
   }

@@ -25,7 +25,110 @@ export type ThemeVariant =
   | 'medical-teal'
   | 'academic-indigo'
   | 'editorial-obsidian'
-  | 'warm-amber';
+  | 'warm-amber'
+  | 'emerald-care'
+  | 'crimson-bold';
+
+export type SubscriptionPlan = 'basic' | 'mid' | 'pro';
+export type LayoutVariant = 'classic' | 'split-sidebar' | 'compact-grid';
+export type PortfolioViewMode = 'portfolio' | 'link-card' | 'editorial-magazine' | 'executive-dark';
+export type BorderStyle = 'sharp' | 'rounded';
+export type ColorPreference = 'light' | 'dark' | 'system';
+
+export interface ThemeOverrides {
+  readonly accentColor?: string;
+  readonly backgroundColor?: string;
+  readonly surfaceColor?: string;
+  readonly textColor?: string;
+  readonly fontStyle?: 'sans' | 'serif' | 'mono';
+}
+
+export interface PlanCapabilities {
+  readonly plan: SubscriptionPlan;
+  readonly label: string;
+  readonly yearlyPriceUsd: number;
+  readonly canSwitchThemeColors: boolean;
+  readonly canSwitchLayouts: boolean;
+  readonly allowedLayouts: readonly LayoutVariant[];
+  readonly allowedViews: readonly PortfolioViewMode[];
+  readonly canCustomizeCss: boolean;
+  readonly canCustomizeColors: boolean;
+  readonly canHideBranding: boolean;
+  readonly baseServiceLimit: number;
+  readonly maxTestimonials: number | null; // null = unlimited
+  readonly includesCustomDomain: boolean;
+  readonly canPurchaseCustomDomainAddon: boolean;
+  readonly includesGoogleReviews: boolean;
+  readonly includesWhatsappAlerts: boolean;
+}
+
+export const PLAN_CAPABILITIES: Record<SubscriptionPlan, PlanCapabilities> = {
+  basic: {
+    plan: 'basic',
+    label: 'Basic',
+    yearlyPriceUsd: 20,
+    canSwitchThemeColors: true,
+    canSwitchLayouts: false,
+    allowedLayouts: ['classic'],
+    allowedViews: ['portfolio'],
+    canCustomizeCss: false,
+    canCustomizeColors: false,
+    canHideBranding: false,
+    baseServiceLimit: 5,
+    maxTestimonials: 3,
+    includesCustomDomain: false,
+    canPurchaseCustomDomainAddon: true,
+    includesGoogleReviews: false,
+    includesWhatsappAlerts: false,
+  },
+  mid: {
+    plan: 'mid',
+    label: 'Mid / Growth',
+    yearlyPriceUsd: 89,
+    canSwitchThemeColors: true,
+    canSwitchLayouts: true,
+    allowedLayouts: ['classic', 'split-sidebar', 'compact-grid'],
+    allowedViews: ['portfolio', 'link-card'],
+    canCustomizeCss: false,
+    canCustomizeColors: false,
+    canHideBranding: false,
+    baseServiceLimit: 15,
+    maxTestimonials: null,
+    includesCustomDomain: true,
+    canPurchaseCustomDomainAddon: false,
+    includesGoogleReviews: true,
+    includesWhatsappAlerts: true,
+  },
+  pro: {
+    plan: 'pro',
+    label: 'Pro White-Label',
+    yearlyPriceUsd: 299,
+    canSwitchThemeColors: true,
+    canSwitchLayouts: true,
+    allowedLayouts: ['classic', 'split-sidebar', 'compact-grid'],
+    allowedViews: ['portfolio', 'link-card', 'editorial-magazine', 'executive-dark'],
+    canCustomizeCss: true,
+    canCustomizeColors: true,
+    canHideBranding: true,
+    baseServiceLimit: 999,
+    maxTestimonials: null,
+    includesCustomDomain: true,
+    canPurchaseCustomDomainAddon: false,
+    includesGoogleReviews: true,
+    includesWhatsappAlerts: true,
+  },
+};
+
+export function normalizePlan(plan?: string | null): SubscriptionPlan {
+  if (plan === 'mid' || plan === 'pro' || plan === 'basic') {
+    return plan;
+  }
+  return 'basic';
+}
+
+export function getPlanCapabilities(plan?: string | null): PlanCapabilities {
+  return PLAN_CAPABILITIES[normalizePlan(plan)];
+}
 
 export interface ServiceItem {
   readonly id: string;
@@ -101,6 +204,16 @@ export interface UserProfile {
   readonly mustChangePassword?: boolean;
   readonly emergencyNotice?: string;
   readonly theme: ThemeVariant;
+  readonly subscriptionPlan?: SubscriptionPlan;
+  readonly subscriptionStatus?: string;
+  readonly layoutVariant?: LayoutVariant;
+  readonly viewMode?: PortfolioViewMode;
+  readonly borderStyle?: BorderStyle;
+  readonly themeOverrides?: ThemeOverrides;
+  readonly customCss?: string;
+  readonly hidePlatformBranding?: boolean;
+  readonly customDomainAddon?: boolean;
+  readonly extraServiceSlots?: number;
   readonly services: readonly ServiceItem[];
   readonly availability: readonly DayAvailability[];
   readonly testimonials: readonly Testimonial[];
@@ -151,6 +264,16 @@ export interface CreateProfileDto {
   readonly clientAccessKey?: string;
   readonly emergencyNotice?: string;
   readonly theme: ThemeVariant;
+  readonly subscriptionPlan?: SubscriptionPlan;
+  readonly subscriptionStatus?: string;
+  readonly layoutVariant?: LayoutVariant;
+  readonly viewMode?: PortfolioViewMode;
+  readonly borderStyle?: BorderStyle;
+  readonly themeOverrides?: ThemeOverrides;
+  readonly customCss?: string;
+  readonly hidePlatformBranding?: boolean;
+  readonly customDomainAddon?: boolean;
+  readonly extraServiceSlots?: number;
   readonly services: readonly ServiceItem[];
   readonly availability: readonly DayAvailability[];
   readonly testimonials: readonly Testimonial[];

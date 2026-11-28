@@ -96,6 +96,15 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'portal/reset-password',
+    canActivate: [customDomainGuard],
+    title: 'Reset Password — Profilease',
+    loadComponent: () =>
+      import('@features/portal/portal-reset-password.component').then(
+        (m) => m.PortalResetPasswordComponent
+      ),
+  },
+  {
     path: 'portal',
     canActivate: [customDomainGuard, clientGuard],
     loadComponent: () =>
@@ -141,6 +150,14 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('@features/portal/portal-profile.component').then(
             (m) => m.PortalProfileComponent
+          ),
+      },
+      {
+        path: 'appearance',
+        title: 'Appearance & Theme — Client Portal',
+        loadComponent: () =>
+          import('@features/portal/portal-appearance.component').then(
+            (m) => m.PortalAppearanceComponent
           ),
       },
     ],

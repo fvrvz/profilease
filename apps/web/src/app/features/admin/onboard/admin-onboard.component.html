@@ -542,6 +542,65 @@
               </p>
             </div>
 
+            <!-- Subscription Plan & Corner Style -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-neutral-50 border border-neutral-300 p-4">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-2">
+                  Subscription Plan
+                </label>
+                <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                  @for (p of ['basic', 'mid', 'pro']; track p) {
+                    <button
+                      type="button"
+                      (click)="setPlan(p)"
+                      class="py-2 px-2 border-2 font-bold uppercase cursor-pointer"
+                      [class.border-neutral-900]="selectedPlan() === p"
+                      [class.bg-neutral-900]="selectedPlan() === p"
+                      [class.text-white]="selectedPlan() === p"
+                      [class.border-neutral-300]="selectedPlan() !== p"
+                    >{{ p }}</button>
+                  }
+                </div>
+                @if (selectedPlan() === 'basic') {
+                  <label class="flex items-center gap-2 mt-2 text-[11px] font-mono cursor-pointer">
+                    <input
+                      type="checkbox"
+                      [checked]="customDomainAddon()"
+                      (change)="customDomainAddon.set(!customDomainAddon())"
+                      class="w-3.5 h-3.5 accent-neutral-900"
+                    />
+                    <span>Enable Basic Custom Domain Add-on</span>
+                  </label>
+                }
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-2">
+                  Border Corners (All Plans)
+                </label>
+                <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+                  <button
+                    type="button"
+                    (click)="selectedBorderStyle.set('sharp')"
+                    class="py-2 px-2 border-2 font-bold uppercase cursor-pointer"
+                    [class.border-neutral-900]="selectedBorderStyle() === 'sharp'"
+                    [class.bg-neutral-900]="selectedBorderStyle() === 'sharp'"
+                    [class.text-white]="selectedBorderStyle() === 'sharp'"
+                    [class.border-neutral-300]="selectedBorderStyle() !== 'sharp'"
+                  >■ Sharp</button>
+                  <button
+                    type="button"
+                    (click)="selectedBorderStyle.set('rounded')"
+                    class="py-2 px-2 border-2 font-bold uppercase cursor-pointer"
+                    [class.border-neutral-900]="selectedBorderStyle() === 'rounded'"
+                    [class.bg-neutral-900]="selectedBorderStyle() === 'rounded'"
+                    [class.text-white]="selectedBorderStyle() === 'rounded'"
+                    [class.border-neutral-300]="selectedBorderStyle() !== 'rounded'"
+                  >● Rounded</button>
+                </div>
+              </div>
+            </div>
+
             <!-- Theme Picker -->
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-3">

@@ -50,6 +50,18 @@ interface ProfileRow {
   service_mode?: string | null;
   testimonials_json?: string | null;
   google_reviews_url?: string | null;
+  subscription_plan?: string | null;
+  subscription_status?: string | null;
+  layout_variant?: string | null;
+  view_mode?: string | null;
+  border_style?: string | null;
+  theme_overrides_json?: string | null;
+  custom_css?: string | null;
+  hide_platform_branding?: number | null;
+  custom_domain_addon?: number | null;
+  extra_service_slots?: number | null;
+  password_reset_token?: string | null;
+  password_reset_expires_at?: string | null;
 }
 
 interface ServiceRow {
@@ -267,7 +279,14 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const theme = body.theme || 'medical-teal';
     const customDomain = body.customDomain || null;
     const clientAccessKey = body.clientAccessKey || `Tmp-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6)}`;
+    const hashedAccessKey = await hashPassword(clientAccessKey);
     const mustChangePassword = 1;
+    const subscriptionPlan = (body as { subscriptionPlan?: string }).subscriptionPlan || 'basic';
+    const layoutVariant = (body as { layoutVariant?: string }).layoutVariant || 'classic';
+    const viewMode = (body as { viewMode?: string }).viewMode || 'portfolio';
+    const borderStyle = (body as { borderStyle?: string }).borderStyle || 'sharp';
+    const customDomainAddon = (body as { customDomainAddon?: boolean }).customDomainAddon ? 1 : 0;
+    const extraServiceSlots = Number((body as { extraServiceSlots?: number }).extraServiceSlots || 0);
     const email = body.email || '';
     const phone = body.phone || '';
     const country = body.country || 'United States';
@@ -289,14 +308,18 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
         id, slug, name, profession, title, bio, avatar_url, theme, custom_domain,
         client_access_key, must_change_password, email, phone, country, currency, timezone,
         credentials, social_links, location, clinic_or_school_name, about_detailed,
-        timings_note, emergency_notice, service_mode, testimonials_json, google_reviews_url
+        timings_note, emergency_notice, service_mode, testimonials_json, google_reviews_url,
+        subscription_plan, subscription_status, layout_variant, view_mode, border_style,
+        custom_domain_addon, extra_service_slots
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id, slug, name, profession, title, bio, avatarUrl, theme, customDomain,
-      clientAccessKey, mustChangePassword, email, phone, country, currency, timezone,
+      hashedAccessKey, mustChangePassword, email, phone, country, currency, timezone,
       credentials, socialLinks, location, clinicOrSchoolName, aboutDetailed,
-      timingsNote, emergencyNotice, serviceMode, testimonialsJson, googleReviewsUrl
+      timingsNote, emergencyNotice, serviceMode, testimonialsJson, googleReviewsUrl,
+      subscriptionPlan, 'active', layoutVariant, viewMode, borderStyle,
+      customDomainAddon, extraServiceSlots
     ).run();
 
     if (Array.isArray(body.services)) {
@@ -361,6 +384,9 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       timezone?: string;
       credentials?: string[];
       socialLinks?: Array<{ platform: string; url: string }>;
+      subscriptionPlan?: string;
+      customDomainAddon?: boolean;
+      extraServiceSlots?: number;
     }>().catch(() => ({}));
 
     const current = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(id).first<ProfileRow>();
@@ -380,12 +406,21 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const timezone = body.timezone ?? current.timezone;
     const credentials = body.credentials !== undefined ? JSON.stringify(body.credentials) : current.credentials;
     const socialLinks = body.socialLinks !== undefined ? JSON.stringify(body.socialLinks) : current.social_links;
+    const subscriptionPlan = body.subscriptionPlan ?? (current.subscription_plan || 'basic');
+    const customDomainAddon = body.customDomainAddon !== undefined ? (body.customDomainAddon ? 1 : 0) : (current.custom_domain_addon || 0);
+    const extraServiceSlots = body.extraServiceSlots !== undefined ? body.extraServiceSlots : (current.extra_service_slots || 0);
 
     await env.DB.prepare(`
       UPDATE profiles
-      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, theme = ?, custom_domain = ?, country = ?, currency = ?, timezone = ?, credentials = ?, social_links = ?
+      SET name = ?, title = ?, bio = ?, avatar_url = ?, phone = ?, theme = ?, custom_domain = ?,
+          country = ?, currency = ?, timezone = ?, credentials = ?, social_links = ?,
+          subscription_plan = ?, custom_domain_addon = ?, extra_service_slots = ?
       WHERE id = ?
-    `).bind(name, title, bio, avatarUrl, phone, theme, customDomain, country, currency, timezone, credentials, socialLinks, id).run();
+    `).bind(
+      name, title, bio, avatarUrl, phone, theme, customDomain,
+      country, currency, timezone, credentials, socialLinks,
+      subscriptionPlan, customDomainAddon, extraServiceSlots, id
+    ).run();
 
     const updatedRow = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(id).first<ProfileRow>();
     const updatedProfile = await formatProfileWithRelations(updatedRow!, env.DB);
@@ -462,22 +497,29 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
     const cleanEmail = body.email.trim().toLowerCase();
     const key = body.accessKey.trim();
-    const row = await env.DB.prepare(`
-      SELECT * FROM profiles 
-      WHERE LOWER(email) = ? 
-        AND (
-          client_access_key = ? 
-          OR (? = 'vance2026' AND LOWER(email) = 'contact@drelenavance.com')
-          OR (? = 'elena2026' AND LOWER(email) = 'contact@drelenavance.com')
-          OR (? = 'chen2026' AND LOWER(email) = 'marcus@chenphysics.edu')
-          OR (? = 'marcus2026' AND LOWER(email) = 'marcus@chenphysics.edu')
-        )
-    `)
-      .bind(cleanEmail, key, key, key, key, key)
+    const row = await env.DB.prepare('SELECT * FROM profiles WHERE LOWER(email) = ?')
+      .bind(cleanEmail)
       .first<ProfileRow>();
 
     if (!row) {
       return Response.json({ error: 'Invalid client credentials or unauthorized profile.' }, { status: 401 });
+    }
+
+    const isLegacyDemoAlias =
+      (cleanEmail === 'contact@drelenavance.com' && (key === 'vance2026' || key === 'elena2026')) ||
+      (cleanEmail === 'marcus@chenphysics.edu' && (key === 'chen2026' || key === 'marcus2026'));
+
+    const validPassword = isLegacyDemoAlias || (await verifyPassword(key, row.client_access_key));
+    if (!validPassword) {
+      return Response.json({ error: 'Invalid client credentials or unauthorized profile.' }, { status: 401 });
+    }
+
+    // Auto-upgrade legacy plaintext passwords in DB to salted SHA-256 hash
+    if (!row.client_access_key.startsWith('sha256$') && !isLegacyDemoAlias) {
+      const upgradedHash = await hashPassword(key);
+      await env.DB.prepare('UPDATE profiles SET client_access_key = ? WHERE id = ?')
+        .bind(upgradedHash, row.id)
+        .run();
     }
 
     const profile = await formatProfileWithRelations(row, env.DB);
@@ -507,12 +549,13 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       .bind(body.profileId)
       .first<ProfileRow>();
 
-    if (!row || row.client_access_key !== body.currentPassword.trim()) {
+    if (!row || !(await verifyPassword(body.currentPassword.trim(), row.client_access_key))) {
       return Response.json({ error: 'Current temporary password is incorrect.' }, { status: 401 });
     }
 
+    const newHash = await hashPassword(body.newPassword.trim());
     await env.DB.prepare('UPDATE profiles SET client_access_key = ?, must_change_password = 0 WHERE id = ?')
-      .bind(body.newPassword.trim(), body.profileId)
+      .bind(newHash, body.profileId)
       .run();
 
     const updated = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?')
@@ -525,6 +568,74 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
 
     const profile = await formatProfileWithRelations(updated, env.DB);
     return Response.json({ success: true, profile });
+  }
+
+  // --- POST /api/client/forgot-password ---
+  if (path === '/api/client/forgot-password' && method === 'POST') {
+    const body = await request.json<{ email?: string }>().catch(() => ({}));
+    if (!body.email) {
+      return Response.json({ error: 'Email address is required.' }, { status: 400 });
+    }
+
+    const cleanEmail = body.email.trim().toLowerCase();
+    const row = await env.DB.prepare('SELECT id, name, email FROM profiles WHERE LOWER(email) = ?')
+      .bind(cleanEmail)
+      .first<{ id: string; name: string; email: string }>();
+
+    if (row) {
+      const resetToken = `rst-${crypto.randomUUID().replace(/-/g, '')}`;
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      await env.DB.prepare(
+        'UPDATE profiles SET password_reset_token = ?, password_reset_expires_at = ? WHERE id = ?'
+      )
+        .bind(resetToken, expiresAt, row.id)
+        .run();
+
+      const resetUrl = `${url.origin}/portal/reset-password?token=${resetToken}`;
+      ctx.waitUntil(
+        dispatchPasswordResetEmail({
+          env,
+          email: row.email,
+          name: row.name,
+          resetUrl,
+        })
+      );
+    }
+
+    return Response.json({
+      success: true,
+      message: 'If an account matches that email, a password reset link has been sent.',
+    });
+  }
+
+  // --- POST /api/client/reset-password ---
+  if (path === '/api/client/reset-password' && method === 'POST') {
+    const body = await request.json<{ token?: string; newPassword?: string }>().catch(() => ({}));
+    if (!body.token || !body.newPassword) {
+      return Response.json({ error: 'Missing reset token or new password.' }, { status: 400 });
+    }
+    if (body.newPassword.trim().length < 8) {
+      return Response.json({ error: 'New password must be at least 8 characters.' }, { status: 400 });
+    }
+
+    const row = await env.DB.prepare('SELECT * FROM profiles WHERE password_reset_token = ?')
+      .bind(body.token.trim())
+      .first<ProfileRow>();
+
+    if (!row || !row.password_reset_expires_at || new Date(row.password_reset_expires_at).getTime() < Date.now()) {
+      return Response.json({ error: 'Invalid or expired password reset link.' }, { status: 400 });
+    }
+
+    const newHash = await hashPassword(body.newPassword.trim());
+    await env.DB.prepare(`
+      UPDATE profiles
+      SET client_access_key = ?, must_change_password = 0, password_reset_token = NULL, password_reset_expires_at = NULL
+      WHERE id = ?
+    `)
+      .bind(newHash, row.id)
+      .run();
+
+    return Response.json({ success: true, message: 'Password has been reset successfully. You can now log in.' });
   }
 
   // --- GET /api/client/me?profileId=... ---
@@ -779,6 +890,13 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       timingsNote?: string;
       serviceMode?: string;
       googleReviewsUrl?: string | null;
+      theme?: string;
+      layoutVariant?: string;
+      viewMode?: string;
+      borderStyle?: string;
+      themeOverrides?: Record<string, string> | null;
+      customCss?: string | null;
+      hidePlatformBranding?: boolean;
       credentials?: string[];
       socialLinks?: Array<{ platform: string; url: string }>;
       testimonials?: Array<{ id?: string; clientName: string; roleOrCondition: string; comment: string; rating: number; date: string }>;
@@ -794,6 +912,41 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const current = await env.DB.prepare('SELECT * FROM profiles WHERE id = ?').bind(body.id).first<ProfileRow>();
     if (!current) {
       return Response.json({ error: `Profile '${body.id}' not found.` }, { status: 404 });
+    }
+
+    const plan = current.subscription_plan === 'mid' || current.subscription_plan === 'pro' ? current.subscription_plan : 'basic';
+    const hasCustomDomainAddon = current.custom_domain_addon === 1;
+    const extraServiceSlots = current.extra_service_slots || 0;
+    const maxServices = (plan === 'pro' ? 999 : plan === 'mid' ? 15 : 5) + extraServiceSlots;
+    const maxTestimonials = plan === 'basic' ? 3 : null;
+    const allowedLayouts = plan === 'basic' ? ['classic'] : ['classic', 'split-sidebar', 'compact-grid'];
+    const allowedViews =
+      plan === 'pro'
+        ? ['portfolio', 'link-card', 'editorial-magazine', 'executive-dark']
+        : plan === 'mid'
+          ? ['portfolio', 'link-card']
+          : ['portfolio'];
+
+    if (body.layoutVariant && !allowedLayouts.includes(body.layoutVariant)) {
+      return Response.json({ error: `Layout '${body.layoutVariant}' requires Mid or Pro plan.` }, { status: 403 });
+    }
+    if (body.viewMode && !allowedViews.includes(body.viewMode)) {
+      return Response.json({ error: `View mode '${body.viewMode}' is not included in your ${plan} plan.` }, { status: 403 });
+    }
+    if ((body.customCss !== undefined || body.themeOverrides !== undefined || body.hidePlatformBranding) && plan !== 'pro') {
+      return Response.json({ error: 'Custom CSS, color overrides, and white-label branding require the Pro plan.' }, { status: 403 });
+    }
+    if (body.customDomain && plan === 'basic' && !hasCustomDomainAddon) {
+      return Response.json({ error: 'Custom domains on Basic require the Custom Domain add-on or an upgrade to Mid/Pro.' }, { status: 403 });
+    }
+    if (body.googleReviewsUrl && plan === 'basic') {
+      return Response.json({ error: 'Google Reviews integration requires Mid or Pro plan.' }, { status: 403 });
+    }
+    if (Array.isArray(body.services) && body.services.length > maxServices) {
+      return Response.json({ error: `Service limit (${maxServices}) reached for your current plan.` }, { status: 403 });
+    }
+    if (Array.isArray(body.testimonials) && maxTestimonials !== null && body.testimonials.length > maxTestimonials) {
+      return Response.json({ error: `Testimonials limit (${maxTestimonials}) reached on Basic plan.` }, { status: 403 });
     }
 
     const updatedName = body.name ?? current.name;
@@ -812,6 +965,13 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
     const updatedTimezone = body.timezone ?? current.timezone;
     const updatedTimingsNote = body.timingsNote !== undefined ? body.timingsNote : (current.timings_note ?? '');
     const updatedServiceMode = body.serviceMode ?? current.service_mode ?? 'clinic';
+    const updatedTheme = body.theme ?? current.theme;
+    const updatedLayoutVariant = body.layoutVariant ?? (current.layout_variant || 'classic');
+    const updatedViewMode = body.viewMode ?? (current.view_mode || 'portfolio');
+    const updatedBorderStyle = body.borderStyle === 'rounded' || body.borderStyle === 'sharp' ? body.borderStyle : (current.border_style || 'sharp');
+    const updatedThemeOverrides = body.themeOverrides !== undefined ? JSON.stringify(body.themeOverrides) : (current.theme_overrides_json || null);
+    const updatedCustomCss = body.customCss !== undefined ? (body.customCss || null) : (current.custom_css || null);
+    const updatedHideBranding = body.hidePlatformBranding !== undefined ? (body.hidePlatformBranding ? 1 : 0) : (current.hide_platform_branding || 0);
     const updatedEmergencyNotice = body.emergencyNotice !== undefined ? (body.emergencyNotice || null) : (current.emergency_notice ?? null);
     const updatedGoogleReviewsUrl = body.googleReviewsUrl !== undefined ? (body.googleReviewsUrl?.trim() || null) : (current.google_reviews_url ?? null);
     const updatedCredentials = body.credentials ? JSON.stringify(body.credentials) : current.credentials;
@@ -822,14 +982,16 @@ async function handleApi(request: Request, url: URL, env: Env, ctx: ExecutionCon
       UPDATE profiles
       SET name = ?, title = ?, profession = ?, bio = ?, about_detailed = ?, avatar_url = ?, phone = ?,
           custom_domain = ?, location = ?, clinic_or_school_name = ?, country = ?, currency = ?, timezone = ?,
-          timings_note = ?, service_mode = ?, emergency_notice = ?, google_reviews_url = ?,
-          credentials = ?, social_links = ?, testimonials_json = ?
+          timings_note = ?, service_mode = ?, theme = ?, layout_variant = ?, view_mode = ?, border_style = ?,
+          theme_overrides_json = ?, custom_css = ?, hide_platform_branding = ?,
+          emergency_notice = ?, google_reviews_url = ?, credentials = ?, social_links = ?, testimonials_json = ?
       WHERE id = ?
     `).bind(
       updatedName, updatedTitle, updatedProfession, updatedBio, updatedAboutDetailed, updatedAvatar, updatedPhone,
       updatedCustomDomain, updatedLocation, updatedClinicOrSchool, updatedCountry, updatedCurrency, updatedTimezone,
-      updatedTimingsNote, updatedServiceMode, updatedEmergencyNotice, updatedGoogleReviewsUrl,
-      updatedCredentials, updatedSocialLinks, updatedTestimonials, body.id
+      updatedTimingsNote, updatedServiceMode, updatedTheme, updatedLayoutVariant, updatedViewMode, updatedBorderStyle,
+      updatedThemeOverrides, updatedCustomCss, updatedHideBranding,
+      updatedEmergencyNotice, updatedGoogleReviewsUrl, updatedCredentials, updatedSocialLinks, updatedTestimonials, body.id
     ).run();
 
     if (Array.isArray(body.services)) {
@@ -1250,6 +1412,13 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     })
     .sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
 
+  let themeOverrides: Record<string, string> | undefined;
+  try {
+    if (row.theme_overrides_json) themeOverrides = JSON.parse(row.theme_overrides_json);
+  } catch {
+    themeOverrides = undefined;
+  }
+
   return {
     id: row.id,
     slug: row.slug,
@@ -1260,8 +1429,17 @@ async function formatProfileWithRelations(row: ProfileRow, db: D1Database) {
     aboutDetailed: row.about_detailed || row.bio,
     avatarUrl: row.avatar_url,
     theme: row.theme,
+    subscriptionPlan: row.subscription_plan === 'mid' || row.subscription_plan === 'pro' ? row.subscription_plan : 'basic',
+    subscriptionStatus: row.subscription_status || 'active',
+    layoutVariant: row.layout_variant || 'classic',
+    viewMode: row.view_mode || 'portfolio',
+    borderStyle: row.border_style === 'rounded' ? 'rounded' : 'sharp',
+    themeOverrides,
+    customCss: row.custom_css || undefined,
+    hidePlatformBranding: Boolean(row.hide_platform_branding),
+    customDomainAddon: Boolean(row.custom_domain_addon),
+    extraServiceSlots: row.extra_service_slots || 0,
     customDomain: row.custom_domain,
-    clientAccessKey: row.client_access_key,
     mustChangePassword: Boolean(row.must_change_password),
     email: row.email,
     phone: row.phone,
@@ -1357,5 +1535,67 @@ async function dispatchResendEmails(params: {
     });
   } catch (err) {
     console.error('Resend dispatch error (client):', err);
+  }
+}
+
+async function hashPassword(plain: string): Promise<string> {
+  const saltBytes = new Uint8Array(12);
+  crypto.getRandomValues(saltBytes);
+  const salt = Array.from(saltBytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${plain}`));
+  const hex = Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `sha256$${salt}$${hex}`;
+}
+
+async function verifyPassword(plain: string, stored: string): Promise<boolean> {
+  if (!stored) return false;
+  if (!stored.startsWith('sha256$')) {
+    return stored === plain;
+  }
+  const parts = stored.split('$');
+  if (parts.length !== 3) return false;
+  const [, salt, expectedHex] = parts;
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${plain}`));
+  const actualHex = Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return actualHex === expectedHex;
+}
+
+async function dispatchPasswordResetEmail(params: {
+  env: Env;
+  email: string;
+  name: string;
+  resetUrl: string;
+}): Promise<void> {
+  if (!params.env.RESEND_API_KEY) return;
+  const resend = new Resend(params.env.RESEND_API_KEY);
+  const fromEmail = params.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
+  try {
+    await resend.emails.send({
+      from: `Profilease Security <${fromEmail}>`,
+      to: [params.email],
+      subject: 'Reset Your Profilease Practitioner Password',
+      html: `
+        <div style="font-family: monospace; padding: 24px; border: 2px solid #0a0a0a; max-width: 520px; background: #fff;">
+          <h2 style="text-transform: uppercase; margin-top: 0;">Password Reset Request</h2>
+          <p>Hello ${params.name},</p>
+          <p>We received a request to reset your Practitioner Portal password. Click the button below within 1 hour to set a new password:</p>
+          <p style="margin: 24px 0;">
+            <a href="${params.resetUrl}" style="display: inline-block; padding: 12px 20px; background: #0a0a0a; color: #fff; text-decoration: none; font-weight: bold; text-transform: uppercase;">
+              Reset Password →
+            </a>
+          </p>
+          <p style="font-size: 11px; color: #737373;">If you did not request this, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error('Resend password reset email error:', err);
   }
 }
