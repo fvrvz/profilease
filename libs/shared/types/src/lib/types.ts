@@ -75,6 +75,8 @@ export interface Testimonial {
   readonly date: string;
 }
 
+export type ServiceMode = 'clinic' | 'home-visit' | 'online' | 'hybrid';
+
 export interface UserProfile {
   readonly id: string;
   readonly slug: string;
@@ -87,6 +89,7 @@ export interface UserProfile {
   readonly aboutDetailed: string;
   readonly avatarUrl: string;
   readonly location: string;
+  readonly serviceMode?: ServiceMode;
   readonly clinicOrSchoolName: string;
   readonly email: string;
   readonly phone: string;
@@ -101,6 +104,7 @@ export interface UserProfile {
   readonly services: readonly ServiceItem[];
   readonly availability: readonly DayAvailability[];
   readonly testimonials: readonly Testimonial[];
+  readonly googleReviewsUrl?: string;
   readonly socialLinks: readonly SocialLink[];
   readonly isPublished: boolean;
   readonly createdAt: string;
@@ -136,6 +140,7 @@ export interface CreateProfileDto {
   readonly aboutDetailed: string;
   readonly avatarUrl: string;
   readonly location: string;
+  readonly serviceMode?: ServiceMode;
   readonly clinicOrSchoolName: string;
   readonly email: string;
   readonly phone: string;
@@ -149,6 +154,7 @@ export interface CreateProfileDto {
   readonly services: readonly ServiceItem[];
   readonly availability: readonly DayAvailability[];
   readonly testimonials: readonly Testimonial[];
+  readonly googleReviewsUrl?: string;
   readonly socialLinks: readonly SocialLink[];
   readonly isPublished: boolean;
 }
