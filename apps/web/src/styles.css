@@ -142,14 +142,39 @@ button {
 /* Rounded Corners Toggle (All Plans) */
 .portfolio-root.corners-rounded section,
 .portfolio-root.corners-rounded .pf-card,
+.portfolio-root.corners-rounded div.border,
+.portfolio-root.corners-rounded div.border-2,
+.portfolio-root.corners-rounded form,
+.portfolio-root.corners-rounded article,
+.portfolio-root.corners-rounded aside {
+  border-radius: 0.875rem !important;
+}
+
 .portfolio-root.corners-rounded button,
-.portfolio-root.corners-rounded a,
+.portfolio-root.corners-rounded a.border,
+.portfolio-root.corners-rounded a.border-2,
+.portfolio-root.corners-rounded a[class*="px-"],
 .portfolio-root.corners-rounded input,
 .portfolio-root.corners-rounded select,
 .portfolio-root.corners-rounded textarea,
-.portfolio-root.corners-rounded img,
-.portfolio-root.corners-rounded span.border {
+.portfolio-root.corners-rounded label[class*="border"] {
+  border-radius: 0.5rem !important;
+}
+
+.portfolio-root.corners-rounded img {
   border-radius: 0.75rem !important;
+}
+
+.portfolio-root.corners-rounded span.border,
+.portfolio-root.corners-rounded span[class*="px-"],
+.portfolio-root.corners-rounded code {
+  border-radius: 9999px !important;
+}
+
+.portfolio-root.corners-rounded .shadow-\[8px_8px_0px_0px_rgba\(0\,0\,0\,1\)\],
+.portfolio-root.corners-rounded .shadow-\[6px_6px_0px_0px_rgba\(0\,0\,0\,1\)\],
+.portfolio-root.corners-rounded .shadow-\[4px_4px_0px_0px_rgba\(0\,0\,0\,1\)\] {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -6px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Layout Variants (Mid & Pro) */

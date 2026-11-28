@@ -169,6 +169,14 @@ export const appRoutes: Route[] = [
             (m) => m.PortalAppearanceComponent
           ),
       },
+      {
+        path: 'plan',
+        title: 'Plan & Billing — Client Portal',
+        loadComponent: () =>
+          import('@features/portal/portal-plan.component').then(
+            (m) => m.PortalPlanComponent
+          ),
+      },
     ],
   },
   // --- Public Portfolio Routes ---
