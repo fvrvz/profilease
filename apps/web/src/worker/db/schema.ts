@@ -15,6 +15,7 @@ export const profiles = sqliteTable('profiles', {
   mustChangePassword: integer('must_change_password').notNull().default(0),
   email: text('email').notNull(),
   phone: text('phone').notNull(),
+  city: text('city').default(''),
   country: text('country').notNull(),
   currency: text('currency').notNull(),
   timezone: text('timezone').notNull(),

@@ -196,6 +196,7 @@ export interface UserProfile {
   readonly clinicOrSchoolName: string;
   readonly email: string;
   readonly phone: string;
+  readonly city?: string;
   readonly country: string;
   readonly currency: string;
   readonly timezone: string;
@@ -257,6 +258,7 @@ export interface CreateProfileDto {
   readonly clinicOrSchoolName: string;
   readonly email: string;
   readonly phone: string;
+  readonly city?: string;
   readonly country?: string;
   readonly currency?: string;
   readonly timezone?: string;

@@ -204,6 +204,18 @@
 
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
+                  City (For Home Visits / Local Practice)
+                </label>
+                <input
+                  type="text"
+                  [formField]="identityForm.city"
+                  placeholder="e.g. Bengaluru, London, New York"
+                  class="w-full px-3 py-2.5 bg-white border border-neutral-300 text-neutral-900 text-xs font-mono focus:border-neutral-900 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-neutral-800 mb-1">
                   @if (selectedServiceMode() === 'home-visit') {
                     Home Visit Service Area / City (Optional)
                   } @else if (selectedServiceMode() === 'online') {

@@ -49,6 +49,11 @@ export class PortfolioPageComponent implements OnInit, OnDestroy {
   readonly isLinkCardView = computed<boolean>(() => this.profile()?.viewMode === 'link-card');
   readonly isSplitLayout = computed<boolean>(() => this.profile()?.layoutVariant === 'split-sidebar');
   readonly isCompactLayout = computed<boolean>(() => this.profile()?.layoutVariant === 'compact-grid');
+  readonly cityCountryLabel = computed<string>(() => {
+    const p = this.profile();
+    if (!p) return '';
+    return [p.city?.trim(), p.country?.trim()].filter(Boolean).join(', ');
+  });
 
   readonly customThemeStyle = computed<Record<string, string>>(() => {
     const p = this.profile();
